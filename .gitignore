@@ -25,6 +25,11 @@ obj/
 *.tmp
 *.log
 
+# Documentation
+*.md
+!README.md
+!**/README.md
+
 # Agent & Policy Docs (Filtered per user request)
 agent/
 .agents/
@@ -40,9 +45,8 @@ implementation.md
 *.jpg
 *.png
 *.pdf
-# (Excluding large assets if needed, but for now just general)
 
-# Documentation that might be repetitive
+# Repetitive Docs (Covered by *.md but listed for clarity)
 APPROVE_EDIT_ERROR_FIX.md
 DEPOT_500_ERROR_FIX.md
 DEPOT_CONTROLLER_FIX.md
