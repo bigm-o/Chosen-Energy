@@ -1,0 +1,58 @@
+# Node / React
+node_modules/
+dist/
+dist-ssr/
+*.local
+.env
+.env.*
+!.env.example
+
+# .NET / C#
+bin/
+obj/
+[Oo]bj/
+[Bb]in/
+*.user
+*.userosscache
+*.sln.docstates
+.vs/
+.vscode/
+
+# Build and IDE
+.DS_Store
+*.swp
+*.bak
+*.tmp
+*.log
+
+# Agent & Policy Docs (Filtered per user request)
+agent/
+.agents/
+*_policy.md
+plan.md
+todo.md
+scratchpad.md
+implementation.md
+*.log
+.gemini/
+
+# Project Specific
+*.jpg
+*.png
+*.pdf
+# (Excluding large assets if needed, but for now just general)
+
+# Documentation that might be repetitive
+APPROVE_EDIT_ERROR_FIX.md
+DEPOT_500_ERROR_FIX.md
+DEPOT_CONTROLLER_FIX.md
+DEPOT_ENHANCEMENTS.md
+DUPLICATE_BUTTONS_FIX.md
+FIXES_APPLIED.md
+JSON_CASTING_ERROR_FIX.md
+PURCHASING_MODULE_BACKEND.md
+PURCHASING_MODULE_FRONTEND.md
+PURCHASING_MODULE_SUMMARY.md
+PURCHASING_MODULE_TESTING.md
+PURCHASING_REFINEMENTS.md
+TESTING_GUIDE.md
