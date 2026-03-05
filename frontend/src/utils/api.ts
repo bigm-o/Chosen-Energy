@@ -4,6 +4,15 @@ import { authApi } from '@/services/authService';
 const RAW_BASE_URL = import.meta.env.VITE_API_URL || '';
 const BASE_URL = RAW_BASE_URL && !RAW_BASE_URL.startsWith('http') ? `https://${RAW_BASE_URL}` : RAW_BASE_URL;
 
+export function getFileUrl(path: string | null | undefined) {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+
+  const serverBase = BASE_URL || 'http://localhost:5100';
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  return `${serverBase}${normalizedPath}`;
+}
+
 export async function apiRequest(url: string, options: RequestInit = {}) {
   let token = localStorage.getItem('token');
   const refreshToken = localStorage.getItem('refreshToken');

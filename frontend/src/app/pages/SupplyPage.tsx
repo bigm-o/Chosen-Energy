@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Search, Plus, Filter, Download as DownloadIcon, Eye, CheckCircle, XCircle, Trash2, Calendar, FileText, ArrowRight, User, Truck, DollarSign, Fuel, Info, Edit2, AlertCircle, Clock } from 'lucide-react';
-import { apiRequest } from '@/utils/api';
+import { apiRequest, getFileUrl } from '@/utils/api';
 import { Modal } from '@/app/components/Modal';
 
 interface Supply {
@@ -1051,19 +1051,19 @@ export function SupplyPage() {
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-bold text-gray-700">Invoice / Proof of Sale</p>
                   <button
-                    onClick={() => window.open(`http://localhost:5100${selectedSupply.invoiceUrl}`, '_blank')}
+                    onClick={() => window.open(getFileUrl(selectedSupply.invoiceUrl), '_blank')}
                     className="text-xs text-blue-600 hover:underline flex items-center gap-1"
                   >
                     <DownloadIcon className="w-3 h-3" />
                     Open Original
                   </button>
                 </div>
-                <div className="border border-gray-200 rounded-xl overflow-hidden bg-gray-50 p-2 shadow-inner">
+                <div className="border border-gray-200 rounded-xl overflow-hidden bg-gray-50 p-2">
                   <img
-                    src={`http://localhost:5100${selectedSupply.invoiceUrl}`}
-                    alt="Invoice"
-                    className="w-full h-auto rounded-lg max-h-[400px] object-contain cursor-zoom-in"
-                    onClick={() => window.open(`http://localhost:5100${selectedSupply.invoiceUrl}`, '_blank')}
+                    src={getFileUrl(selectedSupply.invoiceUrl)}
+                    alt="Proof of Sale"
+                    className="w-full h-auto rounded-lg max-h-[500px] object-contain cursor-zoom-in bg-white"
+                    onClick={() => window.open(getFileUrl(selectedSupply.invoiceUrl), '_blank')}
                   />
                 </div>
               </div>

@@ -1,6 +1,6 @@
 import { apiRequest } from '@/utils/api';
 
-const API_URL = 'http://localhost:5100/api/payments';
+const API_URL = '/payments';
 
 export const paymentApi = {
     create: async (data: any) => {

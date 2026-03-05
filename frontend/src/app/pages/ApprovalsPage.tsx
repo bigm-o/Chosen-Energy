@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { PageHeader } from '@/app/components/PageHeader';
 import { CheckCircle, XCircle, Clock, Eye, Filter, Search } from 'lucide-react';
-import { apiRequest } from '@/utils/api';
+import { apiRequest, getFileUrl } from '@/utils/api';
 import { Modal } from '@/app/components/Modal';
 
 interface ApprovalItem {
@@ -485,10 +485,10 @@ export function ApprovalsPage() {
                             {viewingItem.invoiceUrl ? (
                                 <div className="border border-gray-200 rounded-xl overflow-hidden bg-gray-50 p-2 shadow-inner">
                                     <img
-                                        src={`http://localhost:5100${viewingItem.invoiceUrl}`}
+                                        src={getFileUrl(viewingItem.invoiceUrl)}
                                         alt="Proof of Sale"
                                         className="w-full h-auto rounded-lg max-h-[500px] object-contain cursor-zoom-in bg-white"
-                                        onClick={() => window.open(`http://localhost:5100${viewingItem.invoiceUrl}`, '_blank')}
+                                        onClick={() => window.open(getFileUrl(viewingItem.invoiceUrl), '_blank')}
                                         onError={(e) => {
                                             (e.target as HTMLImageElement).src = 'https://placehold.co/600x400?text=Image+Not+Found';
                                         }}

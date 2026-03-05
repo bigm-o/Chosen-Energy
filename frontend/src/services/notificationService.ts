@@ -1,6 +1,6 @@
 import { apiRequest } from '@/utils/api';
 
-const API_URL = 'http://localhost:5100/api/notifications';
+const API_URL = '/notifications';
 
 export const notificationApi = {
     getMyNotifications: async () => {
