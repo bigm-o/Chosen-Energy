@@ -9,13 +9,20 @@ export async function apiRequest(url: string, options: RequestInit = {}) {
   const refreshToken = localStorage.getItem('refreshToken');
 
   // Normalize URL - handle cases where url is relative but BASE_URL is set
-  const normalizedUrl = url.startsWith('/') ? url : `/${url}`;
+  let normalizedUrl = url.startsWith('/') ? url : `/${url}`;
 
   // If we have a BASE_URL (from Railway env), use it with /api prefix
-  // Otherwise use relative URL (local dev proxy)
-  const fullUrl = url.startsWith('http')
-    ? url
-    : (BASE_URL ? `${BASE_URL}/api${normalizedUrl}` : normalizedUrl);
+  // Ensure we don't double up on /api if the url already has it
+  let fullUrl;
+  if (url.startsWith('http')) {
+    fullUrl = url;
+  } else if (BASE_URL) {
+    // If the path already has /api, don't add it again
+    const path = normalizedUrl.startsWith('/api/') ? normalizedUrl.substring(4) : normalizedUrl;
+    fullUrl = `${BASE_URL}/api${path}`;
+  } else {
+    fullUrl = normalizedUrl;
+  }
 
   // Check token expiration and try to refresh if needed
   if (token && isTokenExpired(token) && refreshToken) {
