@@ -1,7 +1,8 @@
 import { isTokenExpired } from '@/hooks/useAuth';
 import { authApi } from '@/services/authService';
 
-const BASE_URL = import.meta.env.VITE_API_URL || '';
+const RAW_BASE_URL = import.meta.env.VITE_API_URL || '';
+const BASE_URL = RAW_BASE_URL && !RAW_BASE_URL.startsWith('http') ? `https://${RAW_BASE_URL}` : RAW_BASE_URL;
 
 export async function apiRequest(url: string, options: RequestInit = {}) {
   let token = localStorage.getItem('token');

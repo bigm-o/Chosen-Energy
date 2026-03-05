@@ -1,6 +1,7 @@
 import { ApiResponse } from '@/types';
 
-const BASE_URL = import.meta.env.VITE_API_URL || '';
+const RAW_BASE_URL = import.meta.env.VITE_API_URL || '';
+const BASE_URL = RAW_BASE_URL && !RAW_BASE_URL.startsWith('http') ? `https://${RAW_BASE_URL}` : RAW_BASE_URL;
 const API_URL = BASE_URL ? `${BASE_URL}/api` : 'http://localhost:5100/api';
 
 export interface LoginRequest {
