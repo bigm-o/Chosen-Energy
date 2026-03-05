@@ -108,6 +108,9 @@ app.UseMiddleware<ExceptionMiddleware>();
 
 app.UseCors("AllowFrontend");
 
+// Health check endpoint
+app.MapGet("/api/health", () => Results.Ok(new { Status = "Healthy", Time = DateTime.UtcNow }));
+
 // Add JWT validation middleware before authentication
 app.UseMiddleware<JwtValidationMiddleware>();
 
