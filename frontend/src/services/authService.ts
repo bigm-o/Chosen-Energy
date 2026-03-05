@@ -1,6 +1,7 @@
 import { ApiResponse } from '@/types';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5100/api';
+const BASE_URL = import.meta.env.VITE_API_URL || '';
+const API_URL = BASE_URL ? `${BASE_URL}/api` : 'http://localhost:5100/api';
 
 export interface LoginRequest {
   email: string;
@@ -56,7 +57,7 @@ export const authApi = {
   validateToken: async (token: string): Promise<ApiResponse<{ valid: boolean }>> => {
     const response = await fetch(`${API_URL}/auth/validate`, {
       method: 'POST',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },

@@ -1,0 +1,200 @@
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'ChosenEnergy.API.Controllers.AuthController.RefreshToken (ChosenEnergy.API)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "RefreshToken", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[ChosenEnergy.API.Models.ApiResponse`1[ChosenEnergy.API.DTOs.RefreshTokenResponse]]] RefreshToken(ChosenEnergy.API.DTOs.RefreshTokenRequest) on controller ChosenEnergy.API.Controllers.AuthController (ChosenEnergy.API).
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor[1]
+      Executing OkObjectResult, writing value of type 'ChosenEnergy.API.Models.ApiResponse`1[[ChosenEnergy.API.DTOs.RefreshTokenResponse, ChosenEnergy.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action ChosenEnergy.API.Controllers.AuthController.RefreshToken (ChosenEnergy.API) in 79.4682ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'ChosenEnergy.API.Controllers.AuthController.RefreshToken (ChosenEnergy.API)'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://localhost:5100/api/auth/refresh - 200 - application/json;+charset=utf-8 97.0514ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 OPTIONS http://localhost:5100/api/auth/login - - -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 OPTIONS http://localhost:5100/api/auth/login - 204 - - 3.4868ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://localhost:5100/api/auth/login - application/json 59
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'ChosenEnergy.API.Controllers.AuthController.Login (ChosenEnergy.API)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "Login", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[ChosenEnergy.API.Models.ApiResponse`1[ChosenEnergy.API.DTOs.LoginResponse]]] Login(ChosenEnergy.API.DTOs.LoginRequest) on controller ChosenEnergy.API.Controllers.AuthController (ChosenEnergy.API).
+[AUTH] Login attempt for: morayo@driver.chosen.com
+[AuthService] Looking up user: morayo@driver.chosen.com
+[AuthService] User found: morayo@driver.chosen.com, verifying password...
+[AuthService] Password verification result: False
+[AUTH] Authentication failed for: morayo@driver.chosen.com
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor[1]
+      Executing UnauthorizedObjectResult, writing value of type 'ChosenEnergy.API.Models.ApiResponse`1[[ChosenEnergy.API.DTOs.LoginResponse, ChosenEnergy.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action ChosenEnergy.API.Controllers.AuthController.Login (ChosenEnergy.API) in 168.254ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'ChosenEnergy.API.Controllers.AuthController.Login (ChosenEnergy.API)'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://localhost:5100/api/auth/login - 401 - application/json;+charset=utf-8 189.1270ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 OPTIONS http://localhost:5100/api/auth/login - - -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 OPTIONS http://localhost:5100/api/auth/login - 204 - - 7.0775ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://localhost:5100/api/auth/login - application/json 43
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'ChosenEnergy.API.Controllers.AuthController.Login (ChosenEnergy.API)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "Login", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[ChosenEnergy.API.Models.ApiResponse`1[ChosenEnergy.API.DTOs.LoginResponse]]] Login(ChosenEnergy.API.DTOs.LoginRequest) on controller ChosenEnergy.API.Controllers.AuthController (ChosenEnergy.API).
+[AUTH] Login attempt for: morayo
+[AuthService] Looking up user: morayo
+[AuthService] User found: morayo@driver.chosen.com, verifying password...
+[AuthService] Password verification result: True
+[AUTH] Authentication successful for: morayo@driver.chosen.com (Role: Driver)
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor[1]
+      Executing OkObjectResult, writing value of type 'ChosenEnergy.API.Models.ApiResponse`1[[ChosenEnergy.API.DTOs.LoginResponse, ChosenEnergy.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action ChosenEnergy.API.Controllers.AuthController.Login (ChosenEnergy.API) in 172.8682ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'ChosenEnergy.API.Controllers.AuthController.Login (ChosenEnergy.API)'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://localhost:5100/api/auth/login - 200 - application/json;+charset=utf-8 186.1372ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://localhost:5100/api/daily-logs/2026-03-01 - - -
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://localhost:5100/api/settings/DieselSellingPrice - - -
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'ChosenEnergy.API.Controllers.DailyLogsController.GetByDate (ChosenEnergy.API)'
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'ChosenEnergy.API.Controllers.SettingsController.Get (ChosenEnergy.API)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "GetByDate", controller = "DailyLogs"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetByDate(System.DateTime) on controller ChosenEnergy.API.Controllers.DailyLogsController (ChosenEnergy.API).
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "Get", controller = "Settings"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Get(System.String) on controller ChosenEnergy.API.Controllers.SettingsController (ChosenEnergy.API).
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor[1]
+      Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action ChosenEnergy.API.Controllers.SettingsController.Get (ChosenEnergy.API) in 9.7008ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'ChosenEnergy.API.Controllers.SettingsController.Get (ChosenEnergy.API)'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://localhost:5100/api/settings/DieselSellingPrice - 200 - application/json;+charset=utf-8 41.4161ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://localhost:5100/api/settings/DieselSellingPrice - - -
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'ChosenEnergy.API.Controllers.SettingsController.Get (ChosenEnergy.API)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "Get", controller = "Settings"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Get(System.String) on controller ChosenEnergy.API.Controllers.SettingsController (ChosenEnergy.API).
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor[1]
+      Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action ChosenEnergy.API.Controllers.SettingsController.Get (ChosenEnergy.API) in 13.6995ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'ChosenEnergy.API.Controllers.SettingsController.Get (ChosenEnergy.API)'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://localhost:5100/api/settings/DieselSellingPrice - 200 - application/json;+charset=utf-8 15.3943ms
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor[1]
+      Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Object, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action ChosenEnergy.API.Controllers.DailyLogsController.GetByDate (ChosenEnergy.API) in 69.9287ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'ChosenEnergy.API.Controllers.DailyLogsController.GetByDate (ChosenEnergy.API)'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://localhost:5100/api/daily-logs/2026-03-01 - 200 - application/json;+charset=utf-8 101.7246ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://localhost:5100/api/daily-logs/2026-03-01 - - -
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'ChosenEnergy.API.Controllers.DailyLogsController.GetByDate (ChosenEnergy.API)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "GetByDate", controller = "DailyLogs"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetByDate(System.DateTime) on controller ChosenEnergy.API.Controllers.DailyLogsController (ChosenEnergy.API).
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor[1]
+      Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Object, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action ChosenEnergy.API.Controllers.DailyLogsController.GetByDate (ChosenEnergy.API) in 4.3706ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'ChosenEnergy.API.Controllers.DailyLogsController.GetByDate (ChosenEnergy.API)'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://localhost:5100/api/daily-logs/2026-03-01 - 200 - application/json;+charset=utf-8 4.8256ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://localhost:5100/api/customers - - -
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://localhost:5100/api/drivers/me - - -
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://localhost:5100/api/trucks - - -
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'ChosenEnergy.API.Controllers.CustomersController.GetAll (ChosenEnergy.API)'
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'ChosenEnergy.API.Controllers.DriversController.GetMe (ChosenEnergy.API)'
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'ChosenEnergy.API.Controllers.TrucksController.GetAll (ChosenEnergy.API)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "GetAll", controller = "Trucks"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll() on controller ChosenEnergy.API.Controllers.TrucksController (ChosenEnergy.API).
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "GetMe", controller = "Drivers"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetMe() on controller ChosenEnergy.API.Controllers.DriversController (ChosenEnergy.API).
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "GetAll", controller = "Customers"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll() on controller ChosenEnergy.API.Controllers.CustomersController (ChosenEnergy.API).
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor[1]
+      Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.IEnumerable`1[[ChosenEnergy.API.Controllers.TruckDto, ChosenEnergy.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor[1]
+      Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.IEnumerable`1[[ChosenEnergy.API.Models.Customer, ChosenEnergy.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor[1]
+      Executing OkObjectResult, writing value of type '<>f__AnonymousType1`2[[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[ChosenEnergy.API.Models.Driver, ChosenEnergy.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action ChosenEnergy.API.Controllers.CustomersController.GetAll (ChosenEnergy.API) in 16.2435ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'ChosenEnergy.API.Controllers.CustomersController.GetAll (ChosenEnergy.API)'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://localhost:5100/api/customers - 200 - application/json;+charset=utf-8 22.3317ms
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action ChosenEnergy.API.Controllers.TrucksController.GetAll (ChosenEnergy.API) in 23.0412ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'ChosenEnergy.API.Controllers.TrucksController.GetAll (ChosenEnergy.API)'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://localhost:5100/api/trucks - 200 - application/json;+charset=utf-8 29.1483ms
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action ChosenEnergy.API.Controllers.DriversController.GetMe (ChosenEnergy.API) in 23.9643ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'ChosenEnergy.API.Controllers.DriversController.GetMe (ChosenEnergy.API)'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://localhost:5100/api/drivers/me - 200 - application/json;+charset=utf-8 30.0465ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://localhost:5100/api/supplies - multipart/form-data;+boundary=----WebKitFormBoundaryDuRRKwAiErnr2hMk 197785
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'ChosenEnergy.API.Controllers.SuppliesController.Create (ChosenEnergy.API)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "Create", controller = "Supplies"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[ChosenEnergy.API.Models.ApiResponse`1[ChosenEnergy.API.Models.Supply]]] Create(ChosenEnergy.API.DTOs.CreateSupplyRequest) on controller ChosenEnergy.API.Controllers.SuppliesController (ChosenEnergy.API).
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action ChosenEnergy.API.Controllers.SuppliesController.Create (ChosenEnergy.API) in 29.5752ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'ChosenEnergy.API.Controllers.SuppliesController.Create (ChosenEnergy.API)'
+fail: ChosenEnergy.API.Middleware.ExceptionMiddleware[0]
+      Cannot convert null to 'System.Guid' because it is a non-nullable value type
+      Microsoft.CSharp.RuntimeBinder.RuntimeBinderException: Cannot convert null to 'System.Guid' because it is a non-nullable value type
+         at CallSite.Target(Closure, CallSite, Object)
+         at System.Dynamic.UpdateDelegates.UpdateAndExecute1[T0,TRet](CallSite site, T0 arg0)
+         at ChosenEnergy.API.Services.SupplyService.CreateAsync(Supply supply, Guid userId) in /Users/mfanu/Desktop/Personal docs/chosen/Chosen App/backend/ChosenEnergy.API/Services/SupplyService.cs:line 132
+         at ChosenEnergy.API.Controllers.SuppliesController.Create(CreateSupplyRequest request) in /Users/mfanu/Desktop/Personal docs/chosen/Chosen App/backend/ChosenEnergy.API/Controllers/SuppliesController.cs:line 108
+         at lambda_method69(Closure, Object)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.AwaitableObjectResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+         at Microsoft.AspNetCore.Routing.EndpointMiddleware.<Invoke>g__AwaitRequestTask|7_0(Endpoint endpoint, Task requestTask, ILogger logger)
+         at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+         at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+         at ChosenEnergy.API.Middleware.JwtValidationMiddleware.InvokeAsync(HttpContext context) in /Users/mfanu/Desktop/Personal docs/chosen/Chosen App/backend/ChosenEnergy.API/Middleware/JwtValidationMiddleware.cs:line 71
+         at ChosenEnergy.API.Middleware.ExceptionMiddleware.InvokeAsync(HttpContext context) in /Users/mfanu/Desktop/Personal docs/chosen/Chosen App/backend/ChosenEnergy.API/Middleware/ExceptionMiddleware.cs:line 23
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://localhost:5100/api/supplies - 500 - application/json 56.7605ms

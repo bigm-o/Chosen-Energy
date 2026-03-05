@@ -35,6 +35,26 @@ public class InwardLoadsController : ControllerBase
         return Ok(new { success = true, data = created, message = "Inward load created successfully" });
     }
 
+    [HttpPost("bulk")]
+    public async Task<IActionResult> CreateBulk([FromBody] BulkInwardLoadRequest request)
+    {
+        var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdStr)) return Unauthorized();
+
+        var created = await _loadService.CreateBulkAsync(request, Guid.Parse(userIdStr));
+        return Ok(new { success = true, data = created, message = "Bulk inward loads created" });
+    }
+
+    [HttpGet("pending")]
+    public async Task<IActionResult> GetPending()
+    {
+        var role = User.FindFirst(ClaimTypes.Role)?.Value;
+        if (role != "Admin" && role != "MD") return StatusCode(403, new { success = false, message = "Access denied" });
+
+        var pending = await _loadService.GetPendingGroupedAsync();
+        return Ok(new { success = true, data = pending });
+    }
+
     [HttpPost("{id}/approve")]
     public async Task<IActionResult> Approve(Guid id)
     {
@@ -46,5 +66,18 @@ public class InwardLoadsController : ControllerBase
 
         var result = await _loadService.ApproveAsync(id, Guid.Parse(userIdStr));
         return Ok(new { success = true, data = result, message = "Load approved" });
+    }
+
+    [HttpPost("batch/{batchId}/approve")]
+    public async Task<IActionResult> ApproveBatch(Guid batchId)
+    {
+        var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdStr)) return Unauthorized();
+
+        var role = User.FindFirst(ClaimTypes.Role)?.Value;
+        if (role != "Admin" && role != "MD") return StatusCode(403, new { success = false, message = "Only Admin or MD can approve" });
+
+        await _loadService.ApproveBatchAsync(batchId, Guid.Parse(userIdStr));
+        return Ok(new { success = true, message = "Batch approved successfully" });
     }
 }

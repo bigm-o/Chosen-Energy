@@ -25,12 +25,14 @@ public class SupplyService : ISupplyService
     private readonly IDbConnectionFactory _connectionFactory;
     private readonly IAuditService _auditService;
     private readonly INotificationService _notificationService;
+    private readonly IDailyLogService _dailyLogService;
 
-    public SupplyService(IDbConnectionFactory connectionFactory, IAuditService auditService, INotificationService notificationService)
+    public SupplyService(IDbConnectionFactory connectionFactory, IAuditService auditService, INotificationService notificationService, IDailyLogService dailyLogService)
     {
         _connectionFactory = connectionFactory;
         _auditService = auditService;
         _notificationService = notificationService;
+        _dailyLogService = dailyLogService;
     }
 
     public async Task<IEnumerable<Supply>> GetAllAsync()
@@ -116,8 +118,8 @@ public class SupplyService : ISupplyService
         // 1. Validation: Truck Assignment
         var truckQuery = @"
             SELECT 
-                t.id as Id,
-                t.next_maintenance_date as NextMaintenanceDate
+                t.id as truckid,
+                t.next_maintenance_date as nextmaintenance
             FROM drivers d
             JOIN trucks t ON d.assigned_truck_id = t.id
             WHERE d.id = @DriverId";
@@ -126,19 +128,23 @@ public class SupplyService : ISupplyService
 
         if (assignedTruck == null)
         {
-            throw new InvalidOperationException($"The selected driver does not have an active truck assignment.");
+            throw new InvalidOperationException($"The selected driver does not have an active truck assignment. DriverId: {supply.DriverId}");
         }
         
-        Guid assignedTruckId = assignedTruck.Id;
-        DateTime? nextMaintenance = assignedTruck.NextMaintenanceDate;
+        Guid assignedTruckId = (Guid)assignedTruck.truckid;
+        DateTime? nextMaintenance = assignedTruck.nextmaintenance;
         
         if (nextMaintenance.HasValue && nextMaintenance.Value < DateTime.UtcNow.Date)
         {
             throw new InvalidOperationException($"Cannot assign truck. The assigned truck is overdue for maintenance since {nextMaintenance.Value:d}. Please schedule maintenance first.");
         }
 
-
-
+        // 2. Validation: Inventory Balance Check
+        var currentBalance = await _dailyLogService.GetTruckBalanceAsync(assignedTruckId, DateTime.UtcNow);
+        if (currentBalance < supply.Quantity)
+        {
+            throw new InvalidOperationException($"Insufficient load available. Available: {currentBalance:N0} L, Requested: {supply.Quantity:N0} L");
+        }
         // 3. Profitability: Capture Cost Price (Latest Approved Purchase Price)
 
 

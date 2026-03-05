@@ -18,11 +18,13 @@ public class TransloadService : ITransloadService
 {
     private readonly IDbConnectionFactory _connectionFactory;
     private readonly IAuditService _auditService;
+    private readonly IDailyLogService _dailyLogService;
 
-    public TransloadService(IDbConnectionFactory connectionFactory, IAuditService auditService)
+    public TransloadService(IDbConnectionFactory connectionFactory, IAuditService auditService, IDailyLogService dailyLogService)
     {
         _connectionFactory = connectionFactory;
         _auditService = auditService;
+        _dailyLogService = dailyLogService;
     }
 
     public async Task<Transload> CreateAsync(Transload transload, Guid userId)
@@ -47,7 +49,14 @@ public class TransloadService : ITransloadService
 
         string transloadType = $"{(sType == "Small" ? "S" : "L")}-{(dType == "Small" ? "S" : "L")}";
 
-        // 2. Get Receiving Driver Id
+        // 2. Validation: Inventory Balance Check
+        var currentBalance = await _dailyLogService.GetTruckBalanceAsync(transload.SourceTruckId, DateTime.UtcNow);
+        if (currentBalance < transload.Quantity)
+        {
+            throw new InvalidOperationException($"Insufficient load available in source truck. Available: {currentBalance:N0} L, Requested: {transload.Quantity:N0} L");
+        }
+
+        // 3. Get Receiving Driver Id
         var destDriverId = await connection.ExecuteScalarAsync<Guid?>(
             "SELECT id FROM drivers WHERE assigned_truck_id = @TruckId", new { TruckId = transload.DestinationTruckId });
 

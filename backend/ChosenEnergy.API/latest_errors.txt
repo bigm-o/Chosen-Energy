@@ -1,0 +1,52 @@
+Building...
+/Users/mfanu/Desktop/Personal docs/chosen/Chosen App/backend/ChosenEnergy.API/Services/TransloadService.cs(41,24): warning CS8602: Dereference of a possibly null reference. [/Users/mfanu/Desktop/Personal docs/chosen/Chosen App/backend/ChosenEnergy.API/ChosenEnergy.API.csproj]
+/Users/mfanu/Desktop/Personal docs/chosen/Chosen App/backend/ChosenEnergy.API/Services/TransloadService.cs(42,24): warning CS8602: Dereference of a possibly null reference. [/Users/mfanu/Desktop/Personal docs/chosen/Chosen App/backend/ChosenEnergy.API/ChosenEnergy.API.csproj]
+/Users/mfanu/Desktop/Personal docs/chosen/Chosen App/backend/ChosenEnergy.API/Services/TransloadService.cs(212,16): warning CS8603: Possible null reference return. [/Users/mfanu/Desktop/Personal docs/chosen/Chosen App/backend/ChosenEnergy.API/ChosenEnergy.API.csproj]
+/Users/mfanu/Desktop/Personal docs/chosen/Chosen App/backend/ChosenEnergy.API/Services/InwardLoadService.cs(107,16): warning CS8603: Possible null reference return. [/Users/mfanu/Desktop/Personal docs/chosen/Chosen App/backend/ChosenEnergy.API/ChosenEnergy.API.csproj]
+/Users/mfanu/Desktop/Personal docs/chosen/Chosen App/backend/ChosenEnergy.API/Services/SettingsService.cs(34,16): warning CS8603: Possible null reference return. [/Users/mfanu/Desktop/Personal docs/chosen/Chosen App/backend/ChosenEnergy.API/ChosenEnergy.API.csproj]
+/Users/mfanu/Desktop/Personal docs/chosen/Chosen App/backend/ChosenEnergy.API/Services/DailyLogService.cs(43,44): warning CS8603: Possible null reference return. [/Users/mfanu/Desktop/Personal docs/chosen/Chosen App/backend/ChosenEnergy.API/ChosenEnergy.API.csproj]
+dbug: Microsoft.Extensions.Hosting.Internal.Host[1]
+      Hosting starting
+info: Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager[62]
+      User profile is available. Using '/Users/mfanu/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://localhost:5100
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /Users/mfanu/Desktop/Personal docs/chosen/Chosen App/backend/ChosenEnergy.API
+dbug: Microsoft.Extensions.Hosting.Internal.Host[2]
+      Hosting started
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://localhost:5100/api/daily-logs/2026-03-01 - - -
+info: Microsoft.AspNetCore.Authorization.DefaultAuthorizationService[2]
+      Authorization failed. These requirements were not met:
+      DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+info: Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerHandler[12]
+      AuthenticationScheme: Bearer was challenged.
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://localhost:5100/api/daily-logs/2026-03-01 - 401 0 - 51.0103ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 OPTIONS http://localhost:5100/api/auth/refresh - - -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 OPTIONS http://localhost:5100/api/auth/refresh - 204 - - 5.4689ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://localhost:5100/api/auth/refresh - application/json 718
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'ChosenEnergy.API.Controllers.AuthController.RefreshToken (ChosenEnergy.API)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "RefreshToken", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[ChosenEnergy.API.Models.ApiResponse`1[ChosenEnergy.API.DTOs.RefreshTokenResponse]]] RefreshToken(ChosenEnergy.API.DTOs.RefreshTokenRequest) on controller ChosenEnergy.API.Controllers.AuthController (ChosenEnergy.API).
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor[1]
+      Executing OkObjectResult, writing value of type 'ChosenEnergy.API.Models.ApiResponse`1[[ChosenEnergy.API.DTOs.RefreshTokenResponse, ChosenEnergy.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action ChosenEnergy.API.Controllers.AuthController.RefreshToken (ChosenEnergy.API) in 79.4682ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'ChosenEnergy.API.Controllers.AuthController.RefreshToken (ChosenEnergy.API)'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://localhost:5100/api/auth/refresh - 200 - application/json;+charset=utf-8 97.0514ms

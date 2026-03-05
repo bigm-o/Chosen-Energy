@@ -93,6 +93,12 @@ export function Sidebar({ currentPage, setCurrentPage, userRole, collapsed, setC
           icon: CheckCircle,
           roles: ['MD', 'Admin'],
         },
+        {
+          id: 'inward-loads',
+          label: 'Disbursements',
+          icon: Fuel,
+          roles: ['MD', 'Admin'],
+        },
       ],
     },
     {
@@ -140,12 +146,6 @@ export function Sidebar({ currentPage, setCurrentPage, userRole, collapsed, setC
           label: 'Depots',
           icon: MapPin,
           roles: ['MD', 'Admin', 'GarageManager'],
-        },
-        {
-          id: 'inward-loads',
-          label: 'Inward Loads',
-          icon: Fuel,
-          roles: ['MD', 'Admin'],
         },
       ],
     },

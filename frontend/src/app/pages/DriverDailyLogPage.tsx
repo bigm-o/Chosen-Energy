@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { ChevronLeft, ChevronRight, Plus, Bell, User, LogOut, Fuel, Clock, CheckCircle, AlertCircle, Camera, Upload, ImageIcon, Loader2, MapPin, ArrowLeftRight, ShoppingCart, Info, TrendingDown, TrendingUp } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Bell, User, LogOut, Fuel, Clock, CheckCircle, AlertCircle, Camera, Upload, ImageIcon, Loader2, MapPin, ArrowLeftRight, ShoppingCart, Info, TrendingDown, TrendingUp, ChevronDown, Truck as TruckIcon } from 'lucide-react';
 import { apiRequest } from '@/utils/api';
 import { Modal } from '@/app/components/Modal';
 import { toast } from 'sonner';
@@ -24,6 +24,8 @@ interface DailyLog {
   totalSupplies: number;
   closingBalance: number;
   availableLoad: number;
+  totalInToday?: number;
+  totalOutToday?: number;
   logs: LogEntry[];
   pendingConfirmations: any[];
 }
@@ -37,6 +39,7 @@ interface Truck {
   id: string;
   registrationNumber: string;
   truckType: string;
+  driverName?: string;
 }
 
 export function DriverDailyLogPage() {
@@ -60,6 +63,11 @@ export function DriverDailyLogPage() {
     destTruckId: '',
     quantity: '',
   });
+
+  const [customerSearch, setCustomerSearch] = useState('');
+  const [truckSearch, setTruckSearch] = useState('');
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+  const [showTruckDropdown, setShowTruckDropdown] = useState(false);
 
   const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
@@ -155,6 +163,13 @@ export function DriverDailyLogPage() {
         return;
       }
 
+      // Balance Check
+      const qty = parseFloat(formData.quantity);
+      if (qty > (dailyLog?.availableLoad || 0)) {
+        toast.error(`Insufficient load. Available: ${dailyLog?.availableLoad.toLocaleString()} L`);
+        return;
+      }
+
       setFormLoading(true);
       try {
         const payload = new FormData();
@@ -188,6 +203,13 @@ export function DriverDailyLogPage() {
       // Transload
       if (!formData.destTruckId || !formData.quantity) {
         toast.error("Please select destination truck and quantity");
+        return;
+      }
+
+      // Balance Check
+      const qty = parseFloat(formData.quantity);
+      if (qty > (dailyLog?.availableLoad || 0)) {
+        toast.error(`Insufficient load. Available: ${dailyLog?.availableLoad.toLocaleString()} L`);
         return;
       }
 
@@ -240,6 +262,10 @@ export function DriverDailyLogPage() {
 
   const resetForm = () => {
     setFormData({ customerId: '', destTruckId: '', quantity: '' });
+    setCustomerSearch('');
+    setTruckSearch('');
+    setShowCustomerDropdown(false);
+    setShowTruckDropdown(false);
     setInvoiceFile(null);
     setFilePreview(null);
     setDispatchType('Sale');
@@ -299,28 +325,6 @@ export function DriverDailyLogPage() {
           </div>
         </div>
 
-        {/* Available Load Card */}
-        <div className="mb-6">
-          <div className="bg-slate-900 rounded-[2rem] p-8 text-white shadow-2xl relative overflow-hidden">
-            <div className="absolute -right-8 -top-8 w-32 h-32 bg-blue-500/20 rounded-full blur-3xl" />
-            <div className="relative z-10 flex flex-col items-center">
-              <Fuel className="w-10 h-10 text-blue-400 mb-4" />
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Available Load</p>
-              <h2 className="text-4xl font-black">{dailyLog?.availableLoad.toLocaleString() ?? '0'}<span className="text-xl ml-1 text-slate-500">L</span></h2>
-
-              <div className="grid grid-cols-2 gap-8 w-full mt-8 pt-8 border-t border-slate-800">
-                <div>
-                  <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Rollover</p>
-                  <p className="text-lg font-bold">{dailyLog?.rollover.toLocaleString() ?? '0'} L</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Dispatched</p>
-                  <p className="text-lg font-bold text-blue-400">-{dailyLog?.totalSupplies.toLocaleString() ?? '0'} L</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Pending Confirmations */}
         {dailyLog?.pendingConfirmations && dailyLog.pendingConfirmations.length > 0 && (
@@ -346,56 +350,134 @@ export function DriverDailyLogPage() {
           </div>
         )}
 
-        {/* Logs */}
-        <div>
-          <h2 className="text-sm font-bold text-slate-900 mb-4 px-1 flex items-center gap-2">
-            <Clock className="w-4 h-4 text-slate-400" /> Today's Activity
-          </h2>
+        {/* Inward Section */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4 px-1">
+            <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-green-500" /> Inward Fuel
+            </h2>
+            <span className="text-[10px] font-black text-green-600 bg-green-50 px-2 py-1 rounded-lg uppercase tracking-wider">Stock In</span>
+          </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             {loading ? (
-              <div className="py-20 flex flex-col items-center text-slate-300 gap-4">
-                <Loader2 className="animate-spin w-8 h-8" />
-                <p className="text-xs font-bold uppercase">Syncing fleet data...</p>
+              <div className="py-12 flex flex-col items-center text-slate-300 gap-3">
+                <Loader2 className="animate-spin w-5 h-5" />
+                <p className="text-[10px] font-black uppercase">Loading Stock...</p>
               </div>
-            ) : dailyLog?.logs.length === 0 ? (
+            ) : dailyLog?.logs.filter(l => l.type.includes('In') || l.type.includes('Load') || l.type.toLowerCase().includes('disbursement') || l.type.includes('Rollover')).length === 0 ? (
+              <div className="bg-white border border-dashed border-slate-200 rounded-2xl py-8 text-center">
+                <p className="text-[10px] text-slate-400 font-bold uppercase">No Inward records</p>
+              </div>
+            ) : (
+              dailyLog?.logs
+                .filter(l => l.type.includes('In') || l.type.includes('Load') || l.type.toLowerCase().includes('disbursement') || l.type.includes('Rollover'))
+                .map((log) => (
+                  <div key={log.id} className="bg-white border-l-4 border-l-green-500 border-y border-r border-slate-100 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-xs font-bold text-slate-900">{log.type === 'Company Load' ? 'Disbursement' : log.title}</p>
+                        <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
+                          {log.type.replace('Company Load', 'Disbursement')} • {new Date(log.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-black text-green-600">+{log.quantity.toLocaleString()} L</p>
+                        <span className={`text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest ${log.status === 'Approved' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                          }`}>
+                          {log.status === 'Pending' && log.type.includes('Transload') && !log.isConfirmed ? 'Confirm Needed' : log.status}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+            )}
+          </div>
+        </div>
+
+        {/* Available Load Card */}
+        <div className="mb-10">
+          <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden group">
+            <div className="absolute -right-8 -top-8 w-32 h-32 bg-blue-500/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000" />
+            <div className="absolute -left-8 -bottom-8 w-32 h-32 bg-green-500/10 rounded-full blur-3xl" />
+            <div className="relative z-10 flex flex-col items-center">
+              <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md mb-4 border border-white/10">
+                <Fuel className="w-6 h-6 text-blue-400" />
+              </div>
+              <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Operational Balance</p>
+              <h2 className="text-5xl font-black tracking-tight">{dailyLog?.availableLoad.toLocaleString() ?? '0'}<span className="text-xl ml-1 text-slate-500 font-bold">L</span></h2>
+
+              <div className="w-full mt-10 pt-8 border-t border-slate-800/50 flex items-center justify-center gap-12">
+                <div className="text-center">
+                  <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">Stock In</p>
+                  <p className="text-lg font-black text-green-400">+{(dailyLog?.totalInToday ?? 0).toLocaleString()} L</p>
+                </div>
+                <div className="w-[1px] h-8 bg-slate-800" />
+                <div className="text-center">
+                  <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">Stock Out</p>
+                  <p className="text-lg font-black text-rose-400">-{(dailyLog?.totalOutToday ?? 0).toLocaleString()} L</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Outward Section */}
+        <div>
+          <div className="flex items-center justify-between mb-4 px-1">
+            <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <TrendingDown className="w-4 h-4 text-rose-500" /> Outward Usage
+            </h2>
+            <span className="text-[10px] font-black text-rose-600 bg-rose-50 px-2 py-1 rounded-lg uppercase tracking-wider">Dispatched</span>
+          </div>
+
+          <div className="space-y-3">
+            {loading ? (
+              <div className="py-12 flex flex-col items-center text-slate-300 gap-3">
+                <Loader2 className="animate-spin w-5 h-5" />
+                <p className="text-[10px] font-black uppercase">Syncing Sales...</p>
+              </div>
+            ) : dailyLog?.logs.filter(l => l.type === 'Sale' || l.type.includes('Out') || l.type.includes('Supply')).length === 0 ? (
               <div className="bg-white border border-dashed border-slate-200 rounded-2xl py-12 text-center">
-                <Info className="w-8 h-8 text-slate-200 mx-auto mb-2" />
-                <p className="text-xs text-slate-400">No activity recorded for this date.</p>
+                <ShoppingCart className="w-8 h-8 text-slate-200 mx-auto mb-2 opacity-20" />
+                <p className="text-[10px] text-slate-400 font-bold uppercase">No dispatch activity</p>
               </div>
-            ) : dailyLog?.logs.map((log, i) => (
-              <div key={log.id} className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm relative overflow-hidden">
-                <div className={`absolute left-0 top-0 bottom-0 w-1 ${log.type.includes('In') ? 'bg-green-500' : 'bg-blue-500'}`} />
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex gap-3">
-                    <div className={`p-2 rounded-xl ${log.type.includes('In') ? 'bg-green-50 text-green-600' : 'bg-blue-50 text-blue-600'}`}>
-                      {log.type.includes('In') ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+            ) : (
+              dailyLog?.logs
+                .filter(l => l.type === 'Sale' || l.type.includes('Out') || l.type.includes('Supply'))
+                .map((log) => (
+                  <div key={log.id} className="bg-white border-l-4 border-l-rose-500 border-y border-r border-slate-100 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex gap-3">
+                        <div className="p-2 bg-rose-50 rounded-xl text-rose-600">
+                          <TrendingDown className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-slate-900">{log.title}</p>
+                          <p className="text-[10px] text-slate-400 font-semibold uppercase">{log.type} • {new Date(log.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                        </div>
+                      </div>
+                      <div className={`text-[9px] font-black px-2 py-1 rounded-md uppercase tracking-wider ${log.status === 'Approved' ? 'bg-green-100 text-green-700' :
+                        log.status === 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
+                        }`}>
+                        {log.status === 'Pending' && log.type.includes('Transload') && !log.isConfirmed ? 'Awaiting Confirm' : log.status}
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs font-bold text-slate-900">{log.title}</p>
-                      <p className="text-[10px] text-slate-400 font-semibold uppercase">{log.type} • {new Date(log.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                    <div className="flex justify-between items-end border-t border-slate-50 pt-3">
+                      <div>
+                        <p className="text-[9px] text-slate-400 font-black uppercase mb-0.5">Quantity</p>
+                        <p className="text-sm font-black text-rose-600">-{log.quantity.toLocaleString()} L</p>
+                      </div>
+                      {log.value > 0 && (
+                        <div className="text-right">
+                          <p className="text-[9px] text-slate-400 font-black uppercase mb-0.5">Revenue Impact</p>
+                          <p className="text-sm font-black text-slate-900">₦{log.value.toLocaleString()}</p>
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <div className={`text-[10px] font-black px-2 py-1 rounded-md uppercase tracking-wider ${log.status === 'Approved' ? 'bg-green-100 text-green-700' :
-                    log.status === 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
-                    }`}>
-                    {log.status === 'Pending' && log.type.includes('Transload') && !log.isConfirmed ? 'Awaiting Confirm' : log.status}
-                  </div>
-                </div>
-                <div className="flex justify-between items-end border-t border-slate-50 pt-3 mt-1">
-                  <div>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase mb-0.5">Quantity</p>
-                    <p className="text-sm font-black text-slate-900">{log.quantity.toLocaleString()} L</p>
-                  </div>
-                  {log.value > 0 && (
-                    <div className="text-right">
-                      <p className="text-[10px] text-slate-400 font-bold uppercase mb-0.5">Value</p>
-                      <p className="text-sm font-black text-blue-600">₦{log.value.toLocaleString()}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
+                ))
+            )}
           </div>
         </div>
       </main>
@@ -433,32 +515,117 @@ export function DriverDailyLogPage() {
 
           <form onSubmit={handleRegisterDispatch} className="space-y-6">
             {dispatchType === 'Sale' ? (
-              <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Customer Account</label>
-                <select
-                  required
-                  value={formData.customerId}
-                  onChange={e => setFormData({ ...formData, customerId: e.target.value })}
-                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select Target Customer</option>
-                  {customers.map(c => <option key={c.id} value={c.id}>{c.companyName}</option>)}
-                </select>
+              <div className="space-y-4">
+                <div className="relative">
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Customer Account</label>
+                  <div
+                    className={`flex items-center gap-3 p-4 bg-slate-50 border rounded-2xl transition-all ${showCustomerDropdown ? 'border-blue-500 ring-2 ring-blue-50' : 'border-slate-100'}`}
+                    onClick={() => setShowCustomerDropdown(!showCustomerDropdown)}
+                  >
+                    <User className="w-4 h-4 text-slate-400" />
+                    <span className={`text-sm font-semibold flex-1 ${formData.customerId ? 'text-slate-900' : 'text-slate-400'}`}>
+                      {customers.find(c => c.id === formData.customerId)?.companyName || 'Select target customer...'}
+                    </span>
+                    <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${showCustomerDropdown ? 'rotate-180' : ''}`} />
+                  </div>
+
+                  {showCustomerDropdown && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-100 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                      <div className="p-2 border-b border-slate-50">
+                        <input
+                          autoFocus
+                          type="text"
+                          placeholder="Search customers..."
+                          value={customerSearch}
+                          onChange={e => setCustomerSearch(e.target.value)}
+                          onClick={e => e.stopPropagation()}
+                          className="w-full p-3 bg-slate-50 border-none rounded-xl text-xs font-bold outline-none focus:ring-0"
+                        />
+                      </div>
+                      <div className="max-h-48 overflow-y-auto">
+                        <button
+                          type="button"
+                          onClick={() => { setFormData({ ...formData, customerId: '' }); setShowCustomerDropdown(false); }}
+                          className="w-full p-4 text-left text-xs font-bold text-slate-400 hover:bg-slate-50 transition-colors"
+                        >
+                          Clear Selection
+                        </button>
+                        {customers.filter(c => c.companyName.toLowerCase().includes(customerSearch.toLowerCase())).map(c => (
+                          <button
+                            key={c.id}
+                            type="button"
+                            onClick={() => {
+                              setFormData({ ...formData, customerId: c.id });
+                              setShowCustomerDropdown(false);
+                            }}
+                            className="w-full p-4 text-left text-sm font-bold text-slate-900 border-t border-slate-50 hover:bg-blue-50 transition-colors flex items-center justify-between"
+                          >
+                            {c.companyName}
+                            {formData.customerId === c.id && <CheckCircle className="w-4 h-4 text-blue-600" />}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             ) : (
-              <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Destination Truck</label>
-                <select
-                  required
-                  value={formData.destTruckId}
-                  onChange={e => setFormData({ ...formData, destTruckId: e.target.value })}
-                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select Receiver Truck</option>
-                  {trucks.filter(t => t.id !== driverProfile?.assignedTruckId).map(t => (
-                    <option key={t.id} value={t.id}>{t.registrationNumber} ({t.truckType})</option>
-                  ))}
-                </select>
+              <div className="space-y-4">
+                <div className="relative">
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Destination Truck</label>
+                  <div
+                    className={`flex items-center gap-3 p-4 bg-slate-50 border rounded-2xl transition-all ${showTruckDropdown ? 'border-blue-500 ring-2 ring-blue-50' : 'border-slate-100'}`}
+                    onClick={() => setShowTruckDropdown(!showTruckDropdown)}
+                  >
+                    <TruckIcon className="w-4 h-4 text-slate-400" />
+                    <span className={`text-sm font-semibold flex-1 ${formData.destTruckId ? 'text-slate-900' : 'text-slate-400'}`}>
+                      {trucks.find(t => t.id === formData.destTruckId) ?
+                        `${trucks.find(t => t.id === formData.destTruckId)?.registrationNumber} (${trucks.find(t => t.id === formData.destTruckId)?.driverName || 'No Driver'})`
+                        : 'Select destination truck...'}
+                    </span>
+                    <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${showTruckDropdown ? 'rotate-180' : ''}`} />
+                  </div>
+
+                  {showTruckDropdown && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-100 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                      <div className="p-2 border-b border-slate-50">
+                        <input
+                          autoFocus
+                          type="text"
+                          placeholder="Search truck or driver..."
+                          value={truckSearch}
+                          onChange={e => setTruckSearch(e.target.value)}
+                          onClick={e => e.stopPropagation()}
+                          className="w-full p-3 bg-slate-50 border-none rounded-xl text-xs font-bold outline-none focus:ring-0"
+                        />
+                      </div>
+                      <div className="max-h-48 overflow-y-auto">
+                        {trucks
+                          .filter(t => t.id !== driverProfile?.assignedTruckId)
+                          .filter(t =>
+                            t.registrationNumber.toLowerCase().includes(truckSearch.toLowerCase()) ||
+                            (t.driverName && t.driverName.toLowerCase().includes(truckSearch.toLowerCase()))
+                          ).map(t => (
+                            <button
+                              key={t.id}
+                              type="button"
+                              onClick={() => {
+                                setFormData({ ...formData, destTruckId: t.id });
+                                setShowTruckDropdown(false);
+                              }}
+                              className="w-full p-4 text-left text-sm font-bold text-slate-900 border-t border-slate-50 hover:bg-blue-50 transition-colors flex items-center justify-between"
+                            >
+                              <div className="flex flex-col">
+                                <span>{t.registrationNumber}</span>
+                                <span className="text-[10px] text-slate-400 uppercase tracking-widest">{t.driverName || 'No Assigned Driver'}</span>
+                              </div>
+                              {formData.destTruckId === t.id && <CheckCircle className="w-4 h-4 text-blue-600" />}
+                            </button>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 

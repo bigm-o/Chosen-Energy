@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Plus, Filter, Truck as TruckIcon, Eye, AlertTriangle, Edit, Trash2, X, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Plus, Filter, Truck as TruckIcon, Eye, AlertTriangle, Edit, Trash2, X, CheckCircle2, AlertCircle, ChevronDown, User } from 'lucide-react';
 import { apiRequest } from '@/utils/api';
 import { Modal } from '@/app/components/Modal';
 import { toast } from 'sonner';
@@ -45,6 +45,9 @@ export function TrucksPage() {
         truckType: 'Large',
         maintenanceIntervalDays: 90
     });
+
+    const [driverSearchTerm, setDriverSearchTerm] = useState('');
+    const [showDriverDropdown, setShowDriverDropdown] = useState(false);
 
     useEffect(() => {
         if (token) {
@@ -448,17 +451,58 @@ export function TrucksPage() {
                         </select>
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Assigned Driver</label>
-                        <select
-                            value={formData.assignedDriverId}
-                            onChange={e => setFormData({ ...formData, assignedDriverId: e.target.value })}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    <div className="relative">
+                        <label className="block text-sm font-medium text-gray-700 mb-2 px-1">Assigned Driver</label>
+                        <div
+                            className={`flex items-center gap-3 p-3 bg-white border rounded-xl cursor-pointer transition-all ${showDriverDropdown ? 'border-blue-500 ring-2 ring-blue-50' : 'border-gray-200'}`}
+                            onClick={() => setShowDriverDropdown(!showDriverDropdown)}
                         >
-                            <option value="">Unassigned</option>
-                            {drivers.map(d => <option key={d.id} value={d.id}>{d.fullName}</option>)}
-                        </select>
-                        <p className="text-xs text-gray-500 mt-1">
+                            <User className="w-4 h-4 text-gray-400" />
+                            <span className={`text-sm font-medium flex-1 ${formData.assignedDriverId ? 'text-gray-900' : 'text-gray-400'}`}>
+                                {drivers.find(d => d.id === formData.assignedDriverId)?.fullName || 'Select driver for assignment...'}
+                            </span>
+                            <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showDriverDropdown ? 'rotate-180' : ''}`} />
+                        </div>
+
+                        {showDriverDropdown && (
+                            <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-xl shadow-xl z-[60] overflow-hidden">
+                                <div className="p-2 border-b border-gray-50">
+                                    <input
+                                        autoFocus
+                                        type="text"
+                                        placeholder="Search driver name..."
+                                        value={driverSearchTerm}
+                                        onChange={(e) => setDriverSearchTerm(e.target.value)}
+                                        onClick={e => e.stopPropagation()}
+                                        className="w-full p-2 bg-gray-50 border-none rounded-lg text-sm font-medium outline-none focus:ring-0"
+                                    />
+                                </div>
+                                <div className="max-h-40 overflow-y-auto">
+                                    <button
+                                        type="button"
+                                        onClick={() => { setFormData({ ...formData, assignedDriverId: '' }); setShowDriverDropdown(false); }}
+                                        className="w-full p-3 text-left text-xs font-bold text-gray-400 hover:bg-gray-50 transition-colors"
+                                    >
+                                        Unassign / Clear
+                                    </button>
+                                    {drivers.filter(d => d.fullName.toLowerCase().includes(driverSearchTerm.toLowerCase())).map(d => (
+                                        <button
+                                            key={d.id}
+                                            type="button"
+                                            onClick={() => {
+                                                setFormData({ ...formData, assignedDriverId: d.id });
+                                                setShowDriverDropdown(false);
+                                            }}
+                                            className="w-full p-3 text-left text-sm font-medium text-gray-900 border-t border-gray-50 hover:bg-blue-50 transition-colors flex items-center justify-between"
+                                        >
+                                            {d.fullName}
+                                            {formData.assignedDriverId === d.id && <CheckCircle2 className="w-4 h-4 text-blue-600" />}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        <p className="text-xs text-gray-500 mt-2 px-1">
                             Note: If you select a driver who is already assigned to another truck, they will be reassigned to this one.
                         </p>
                     </div>

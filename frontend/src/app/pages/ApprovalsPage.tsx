@@ -7,8 +7,10 @@ import { Modal } from '@/app/components/Modal';
 
 interface ApprovalItem {
     id: string;
-    type: 'Supply' | 'Purchase' | 'Trans-load' | 'Maintenance';
+    type: 'Supply' | 'Purchase' | 'Trans-load' | 'Maintenance' | 'Disbursement';
     details: string;
+    isBatch?: boolean;
+    batchId?: string;
     amount: string;
     status: string;
     date: string;
@@ -41,19 +43,24 @@ export function ApprovalsPage() {
     const fetchPending = async () => {
         setLoading(true);
         try {
-            // For now only fetching supplies. Later can fetch purchases, transloads, etc.
-            const response = await apiRequest('/api/supplies/pending');
-            if (response.ok) {
-                const data = await response.json();
-                const items: ApprovalItem[] = (data.data || []).map((s: any) => ({
+            // Fetch both supplies and disbursements
+            const [suppResponse, disResp] = await Promise.all([
+                apiRequest('/api/supplies/pending'),
+                apiRequest('/api/inwardloads/pending')
+            ]);
+
+            let items: ApprovalItem[] = [];
+
+            if (suppResponse.ok) {
+                const suppData = await suppResponse.json();
+                items.push(...(suppData.data || []).map((s: any) => ({
                     id: s.id,
-                    type: 'Supply',
+                    type: 'Supply' as const,
                     details: `${s.customerName} - ${s.truckRegNumber}`,
                     amount: `${s.quantity.toLocaleString()} L`,
                     status: s.status,
                     date: new Date(s.supplyDate).toLocaleDateString('en-GB'),
                     requestedBy: s.createdByName || 'N/A',
-                    // Map extended details
                     customerName: s.customerName,
                     truckRegNumber: s.truckRegNumber,
                     driverName: s.driverName,
@@ -61,9 +68,26 @@ export function ApprovalsPage() {
                     totalAmount: s.totalAmount,
                     pricePerLitre: s.pricePerLitre,
                     invoiceUrl: s.invoiceUrl
-                }));
-                setApprovals(items);
+                })));
             }
+
+            if (disResp.ok) {
+                const disData = await disResp.json();
+                items.push(...(disData.data || []).map((d: any) => ({
+                    id: d.batchId,
+                    batchId: d.batchId,
+                    isBatch: true,
+                    type: 'Disbursement' as const,
+                    details: `${d.truckCount} Truck(s) - ${d.remarks || 'No remarks'}`,
+                    amount: `${d.totalQuantity.toLocaleString()} L`,
+                    status: 'Pending',
+                    date: new Date(d.date).toLocaleDateString('en-GB'),
+                    requestedBy: d.createdBy || 'Direct',
+                    quantity: d.totalQuantity
+                })));
+            }
+
+            setApprovals(items);
         } catch (err) {
             console.error(err);
         } finally {
@@ -89,11 +113,17 @@ export function ApprovalsPage() {
         const { id, action } = actionToConfirm;
 
         try {
-            const url = `/api/supplies/${id}/${action}`;
+            let url = '';
+            if (actionToConfirm.item.type === 'Disbursement') {
+                url = `/api/inwardloads/batch/${id}/approve`;
+            } else {
+                url = `/api/supplies/${id}/${action}`;
+            }
+
             const options: RequestInit = { method: 'POST' };
 
             if (action === 'reject') {
-                const reason = prompt("Enter rejection reason:"); // Can be improved to be inside modal too, but keeping simple for now or improving if requested.
+                const reason = prompt("Enter rejection reason:");
 
                 if (!reason) return;
                 options.body = JSON.stringify({ reason });
@@ -187,7 +217,8 @@ export function ApprovalsPage() {
                             <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${item.type === 'Supply' ? 'bg-blue-100 text-blue-700' :
                                 item.type === 'Purchase' ? 'bg-green-100 text-green-700' :
                                     item.type === 'Trans-load' ? 'bg-purple-100 text-purple-700' :
-                                        'bg-orange-100 text-orange-700'
+                                        item.type === 'Disbursement' ? 'bg-emerald-100 text-emerald-700' :
+                                            'bg-orange-100 text-orange-700'
                                 }`}>
                                 {item.type}
                             </span>
@@ -263,7 +294,8 @@ export function ApprovalsPage() {
                                             <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${item.type === 'Supply' ? 'bg-blue-100 text-blue-700' :
                                                 item.type === 'Purchase' ? 'bg-green-100 text-green-700' :
                                                     item.type === 'Trans-load' ? 'bg-purple-100 text-purple-700' :
-                                                        'bg-orange-100 text-orange-700'
+                                                        item.type === 'Disbursement' ? 'bg-emerald-100 text-emerald-700' :
+                                                            'bg-orange-100 text-orange-700'
                                                 }`}>
                                                 {item.type}
                                             </span>
@@ -338,7 +370,7 @@ export function ApprovalsPage() {
                                 <p className={`text-sm mt-1 ${actionToConfirm.action === 'approve' ? 'text-green-700' : 'text-red-700'
                                     }`}>
                                     {actionToConfirm.action === 'approve'
-                                        ? 'Are you sure you want to approve this supply request? This will deduct stock from the depot.'
+                                        ? `Are you sure you want to approve this ${actionToConfirm.item.type.toLowerCase()} request?`
                                         : 'Are you sure you want to reject this request? This action cannot be undone.'}
                                 </p>
                             </div>
@@ -399,7 +431,8 @@ export function ApprovalsPage() {
                                 <span className={`inline-block px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider mt-1 ${viewingItem.type === 'Supply' ? 'bg-blue-100 text-blue-700' :
                                     viewingItem.type === 'Purchase' ? 'bg-green-100 text-green-700' :
                                         viewingItem.type === 'Trans-load' ? 'bg-purple-100 text-purple-700' :
-                                            'bg-orange-100 text-orange-700'
+                                            viewingItem.type === 'Disbursement' ? 'bg-emerald-100 text-emerald-700' :
+                                                'bg-orange-100 text-orange-700'
                                     }`}>
                                     {viewingItem.type}
                                 </span>
