@@ -76,6 +76,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
+    {
         var allowedOrigins = (builder.Configuration["AllowedOrigin"] ?? "http://localhost:3100")
             .Split(',', StringSplitOptions.RemoveEmptyEntries)
             .Select(o => o.Trim().EndsWith("/") ? o.Trim().TrimEnd('/') : o.Trim())
@@ -85,6 +86,7 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
+    });
 });
 
 var app = builder.Build();
