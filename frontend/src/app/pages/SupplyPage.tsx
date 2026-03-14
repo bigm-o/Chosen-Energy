@@ -456,8 +456,8 @@ export function SupplyPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Sales & Supply</h1>
-          <p className="text-gray-600 mt-1">Manage customer diesel sales and track deliveries</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Sales & Supply</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage customer diesel sales and track deliveries</p>
         </div>
         <button
           onClick={() => { setModalError(null); setShowAddModal(true); }}
@@ -469,34 +469,34 @@ export function SupplyPage() {
       </div>
 
       {/* Stats Section */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-          <p className="text-sm text-gray-500 font-medium">Total Sales</p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">{stats.totalSales}</p>
+      <div id="supply-stats" className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-5">
+          <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Total Sales</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{stats.totalSales}</p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-          <p className="text-sm text-gray-500 font-medium">Volume Supplied</p>
-          <p className="text-2xl font-bold text-blue-600 mt-1">{stats.totalVolume.toLocaleString()} L</p>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-5">
+          <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Volume Supplied</p>
+          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">{stats.totalVolume.toLocaleString()} L</p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-          <p className="text-sm text-gray-500 font-medium">Total Revenue</p>
-          <p className="text-2xl font-bold text-green-600 mt-1">₦{stats.totalRevenue.toLocaleString()}</p>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-5">
+          <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Total Revenue</p>
+          <p className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">₦{stats.totalRevenue.toLocaleString()}</p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-          <p className="text-sm text-gray-500 font-medium">Pending Approval</p>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-5">
+          <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Pending Approval</p>
           <p className="text-2xl font-bold text-orange-600 mt-1">{stats.pending}</p>
         </div>
       </div>
 
       {/* Alerts */}
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex justify-between">
+        <div className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 text-red-700 rounded-lg flex justify-between">
           <span>{error}</span>
           <button onClick={() => setError(null)} className="text-red-900 hover:text-red-700">×</button>
         </div>
       )}
       {success && (
-        <div className="p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg flex justify-between">
+        <div className="p-4 bg-green-50 dark:bg-green-900/30 border border-green-200 text-green-700 rounded-lg flex justify-between">
           <span>{success}</span>
           <button onClick={() => setSuccess(null)} className="text-green-900 hover:text-green-700">×</button>
         </div>
@@ -510,19 +510,19 @@ export function SupplyPage() {
             placeholder="Search by customer or supply ID..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-gray-100 placeholder-gray-400"
           />
         </div>
         <button
           onClick={() => { setModalError(null); setShowFilterModal(true); }}
-          className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors text-gray-700 dark:text-gray-300"
         >
           <Filter className="w-4 h-4" />
           Filter
         </button>
         <button
           onClick={() => { setModalError(null); setShowExportModal(true); }}
-          className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors text-gray-700 dark:text-gray-300"
         >
           <DownloadIcon className="w-4 h-4" />
           Export
@@ -532,9 +532,9 @@ export function SupplyPage() {
       {/* Mobile Cards (Visible on mobile only) */}
       <div className="md:hidden space-y-4">
         {filteredSupplies.map((supply) => (
-          <div key={supply.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+          <div key={supply.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
             <div className="flex justify-between items-start mb-3">
-              <span className="text-xs font-bold text-blue-600">{supply.saleId || 'SAL-000'}</span>
+              <span className="text-xs font-bold text-blue-600 dark:text-blue-400">{supply.saleId || 'SAL-000'}</span>
               <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${supply.status === 'Approved' ? 'bg-green-100 text-green-700' :
                 supply.status === 'Rejected' ? 'bg-red-100 text-red-700' :
                   'bg-orange-100 text-orange-700'
@@ -544,23 +544,23 @@ export function SupplyPage() {
             </div>
 
             <div className="mb-3 space-y-1">
-              <h3 className="font-bold text-gray-900">{supply.customerName}</h3>
-              <p className="text-xs text-gray-500">{new Date(supply.supplyDate).toLocaleDateString('en-GB')}</p>
+              <h3 className="font-bold text-gray-900 dark:text-gray-100">{supply.customerName}</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{new Date(supply.supplyDate).toLocaleDateString('en-GB')}</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 mb-3 bg-gray-50 p-2 rounded-lg">
+            <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 dark:text-gray-400 mb-3 bg-gray-50 dark:bg-gray-900/50 p-2 rounded-lg">
               <div>
-                <p className="font-semibold text-gray-400 uppercase text-[10px]">Volume</p>
-                <p className="font-medium text-gray-900">{supply.quantity.toLocaleString()} L</p>
+                <p className="font-semibold text-gray-400 dark:text-gray-500 uppercase text-[10px]">Volume</p>
+                <p className="font-medium text-gray-900 dark:text-gray-100">{supply.quantity.toLocaleString()} L</p>
               </div>
               <div>
-                <p className="font-semibold text-gray-400 uppercase text-[10px]">Amount</p>
+                <p className="font-semibold text-gray-400 dark:text-gray-500 uppercase text-[10px]">Amount</p>
                 <p className="font-medium text-green-700">₦{supply.totalAmount.toLocaleString()}</p>
               </div>
             </div>
 
-            <div className="flex justify-between items-center pt-2 border-t border-gray-100">
-              <div className="text-xs text-gray-500">
+            <div className="flex justify-between items-center pt-2 border-t border-gray-100 dark:border-gray-800">
+              <div className="text-xs text-gray-500 dark:text-gray-400">
                 <p>{supply.truckRegNumber}</p>
                 <p>{supply.driverName}</p>
               </div>
@@ -569,13 +569,13 @@ export function SupplyPage() {
                   <>
                     <button
                       onClick={() => handleApprove(supply)}
-                      className="p-1.5 text-green-600 bg-green-50 rounded-lg hover:bg-green-100"
+                      className="p-1.5 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 rounded-lg hover:bg-green-100"
                     >
                       <CheckCircle className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleRejectClick(supply)}
-                      className="p-1.5 text-red-600 bg-red-50 rounded-lg hover:bg-red-100"
+                      className="p-1.5 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 rounded-lg hover:bg-red-100"
                     >
                       <XCircle className="w-4 h-4" />
                     </button>
@@ -583,14 +583,14 @@ export function SupplyPage() {
                 )}
                 <button
                   onClick={() => openViewModal(supply)}
-                  className="p-1.5 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100"
+                  className="p-1.5 text-blue-600 dark:text-blue-400 bg-blue-50 rounded-lg hover:bg-blue-100"
                 >
                   <Eye className="w-4 h-4" />
                 </button>
                 {supply.status === 'Pending' && (
                   <button
                     onClick={() => handleDeleteClick(supply)}
-                    className="p-1.5 text-red-600 bg-red-50 rounded-lg hover:bg-red-100"
+                    className="p-1.5 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 rounded-lg hover:bg-red-100"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -602,38 +602,38 @@ export function SupplyPage() {
       </div>
 
       {/* Table (Visible on desktop only) */}
-      <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div id="supply-history" className="hidden md:block bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
         <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-200">
+          <thead className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
             <tr>
-              <th className="text-left py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider">Sale ID</th>
-              <th className="text-left py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider">Date</th>
-              <th className="text-left py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider">Customer</th>
-              <th className="text-left py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider">Volume (L)</th>
-              <th className="text-left py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider">Amount</th>
-              <th className="text-left py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider">Delivery Details</th>
-              <th className="text-left py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
-              <th className="text-center py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
+              <th className="text-left py-4 px-6 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Sale ID</th>
+              <th className="text-left py-4 px-6 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
+              <th className="text-left py-4 px-6 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Customer</th>
+              <th className="text-left py-4 px-6 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Volume (L)</th>
+              <th className="text-left py-4 px-6 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Amount</th>
+              <th className="text-left py-4 px-6 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Delivery Details</th>
+              <th className="text-left py-4 px-6 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+              <th className="text-center py-4 px-6 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody>
             {filteredSupplies.map((supply, index) => (
-              <tr key={supply.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors group">
+              <tr key={supply.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 transition-colors group">
                 <td className="py-4 px-6">
-                  <span className="text-sm font-bold text-blue-600">{supply.saleId || 'SAL-000'}</span>
+                  <span className="text-sm font-bold text-blue-600 dark:text-blue-400">{supply.saleId || 'SAL-000'}</span>
                 </td>
-                <td className="py-4 px-6 text-sm text-gray-900 font-medium">
+                <td className="py-4 px-6 text-sm text-gray-900 dark:text-gray-100 font-medium">
                   {new Date(supply.supplyDate).toLocaleDateString('en-GB')}
                 </td>
                 <td className="py-4 px-6">
-                  <p className="text-sm font-bold text-gray-900">{supply.customerName}</p>
+                  <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{supply.customerName}</p>
                 </td>
-                <td className="py-4 px-6 text-sm text-gray-900 font-semibold">{supply.quantity.toLocaleString()}</td>
-                <td className="py-4 px-6 text-sm font-bold text-gray-900 text-green-700">₦{supply.totalAmount.toLocaleString()}</td>
+                <td className="py-4 px-6 text-sm text-gray-900 dark:text-gray-100 font-semibold">{supply.quantity.toLocaleString()}</td>
+                <td className="py-4 px-6 text-sm font-bold text-gray-900 dark:text-gray-100 text-green-700">₦{supply.totalAmount.toLocaleString()}</td>
                 <td className="py-4 px-6">
                   <div className="flex flex-col">
-                    <span className="text-xs font-bold text-gray-900">{supply.truckRegNumber}</span>
-                    <span className="text-xs text-gray-500">{supply.driverName}</span>
+                    <span className="text-xs font-bold text-gray-900 dark:text-gray-100">{supply.truckRegNumber}</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">{supply.driverName}</span>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -669,14 +669,14 @@ export function SupplyPage() {
                           className="p-1 hover:bg-green-50 rounded-md transition-colors"
                           title="Approve Sale"
                         >
-                          <CheckCircle className="w-4 h-4 text-green-600" />
+                          <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
                         </button>
                         <button
                           onClick={() => { setSupplyToReject(supply); setShowRejectModal(true); }}
-                          className="p-1 hover:bg-red-50 rounded-md transition-colors text-red-600"
+                          className="p-1 hover:bg-red-50 rounded-md transition-colors text-red-600 dark:text-red-400"
                           title="Reject Sale"
                         >
-                          <XCircle className="w-4 h-4 text-red-600" />
+                          <XCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
                         </button>
                       </>
                     )}
@@ -689,14 +689,14 @@ export function SupplyPage() {
                           className="p-1 hover:bg-purple-50 rounded-md transition-colors"
                           title="Approve Edit"
                         >
-                          <CheckCircle className="w-4 h-4 text-purple-600" />
+                          <CheckCircle className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                         </button>
                         <button
                           onClick={() => handleRejectEdit(supply)}
                           className="p-1 hover:bg-red-50 rounded-md transition-colors"
                           title="Reject Edit"
                         >
-                          <XCircle className="w-4 h-4 text-red-600" />
+                          <XCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
                         </button>
                       </>
                     )}
@@ -708,7 +708,7 @@ export function SupplyPage() {
                         className="p-1 hover:bg-zinc-100 rounded-md transition-colors"
                         title="Edit Record"
                       >
-                        <Edit2 className="w-4 h-4 text-blue-600" />
+                        <Edit2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                       </button>
                     )}
 
@@ -716,10 +716,10 @@ export function SupplyPage() {
                     {supply.status === 'Pending' && !supply.hasPendingEdit && (
                       <button
                         onClick={() => { setSupplyToDelete(supply); setShowDeleteModal(true); }}
-                        className="p-1 hover:bg-red-50 rounded-md transition-colors text-red-600"
+                        className="p-1 hover:bg-red-50 rounded-md transition-colors text-red-600 dark:text-red-400"
                         title="Delete Request"
                       >
-                        <Trash2 className="w-4 h-4 text-red-600" />
+                        <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
                       </button>
                     )}
                   </div>
@@ -733,7 +733,7 @@ export function SupplyPage() {
       {/* Add Supply Modal */}
       <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="New Supply Record" size="lg">
         {modalError && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center gap-2">
+          <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 text-red-700 rounded-lg flex items-center gap-2">
             <AlertCircle className="w-4 h-4" />
             <span>{modalError}</span>
           </div>
@@ -741,11 +741,11 @@ export function SupplyPage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-2 gap-6">
             <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Customer</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Customer</label>
               <select
                 value={formData.customerId}
                 onChange={e => setFormData({ ...formData, customerId: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-gray-100"
                 required
               >
                 <option value="">Select Customer</option>
@@ -756,11 +756,11 @@ export function SupplyPage() {
 
           <div className="grid grid-cols-2 gap-6">
             <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Driver (Auto-links Truck)</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Driver (Auto-links Truck)</label>
               <select
                 value={formData.driverId}
                 onChange={e => setFormData({ ...formData, driverId: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-gray-100"
                 required
               >
                 <option value="">Select Driver</option>
@@ -769,26 +769,26 @@ export function SupplyPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Quantity (Litres)</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 font-bold">Quantity (Litres)</label>
               <input
                 type="number"
                 value={formData.quantity}
                 onChange={e => setFormData({ ...formData, quantity: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent font-bold text-gray-900 dark:text-white placeholder-gray-400"
                 placeholder="e.g., 5000"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Price per Litre (₦)</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 font-bold">Price per Litre (₦)</label>
               <input
                 type="number"
                 value={formData.pricePerLitre}
                 onChange={e => setFormData({ ...formData, pricePerLitre: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent font-bold text-gray-900 dark:text-white placeholder-gray-400"
                 placeholder="e.g., 950"
                 required
               />
@@ -796,42 +796,42 @@ export function SupplyPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Supply Date</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Supply Date</label>
             <input
               type="date"
               value={formData.supplyDate}
               onChange={e => setFormData({ ...formData, supplyDate: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-gray-100"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Attach Invoice (Proof of Sale) *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Attach Invoice (Proof of Sale) *</label>
             <input
               type="file"
               accept="image/*"
               onChange={e => setFormData({ ...formData, invoiceFile: e.target.files ? e.target.files[0] : null })}
-              className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              className="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
               required
             />
-            <p className="mt-1 text-xs text-gray-500 italic">Images are automatically compressed for storage efficiency.</p>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 italic">Images are automatically compressed for storage efficiency.</p>
           </div>
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <div className="flex justify-between items-center">
-              <span className="text-sm font-medium text-gray-700">Total Amount:</span>
-              <span className="text-xl font-bold text-blue-600">₦{totalAmount}</span>
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Total Amount:</span>
+              <span className="text-xl font-bold text-blue-600 dark:text-blue-400">₦{totalAmount}</span>
             </div>
           </div>
 
           {isEditing && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 font-bold text-blue-600">REASON FOR EDIT *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 font-bold text-blue-600 dark:text-blue-400">REASON FOR EDIT *</label>
               <textarea
                 value={editReason}
                 onChange={e => setEditReason(e.target.value)}
-                className="w-full px-4 py-2 border-2 border-blue-200 bg-blue-50 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[80px]"
+                className="w-full px-4 py-2 border-2 border-blue-200 bg-blue-50 dark:bg-gray-900 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent min-h-[80px] text-gray-900 dark:text-gray-100 placeholder-gray-400"
                 placeholder="Explain why this change is necessary..."
                 required={isEditing}
               />
@@ -842,7 +842,7 @@ export function SupplyPage() {
             <button
               type="button"
               onClick={() => { setShowAddModal(false); setIsEditing(false); }}
-              className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
             >
               Cancel
             </button>
@@ -866,30 +866,30 @@ export function SupplyPage() {
       >
         <div className="space-y-4">
           {modalError && (
-            <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center gap-2">
+            <div className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 text-red-700 rounded-lg flex items-center gap-2">
               <AlertCircle className="w-4 h-4" />
               <span>{modalError}</span>
             </div>
           )}
-          <div className="p-4 bg-red-50 border border-red-100 rounded-lg flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
+          <div className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-100 rounded-lg flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" />
             <div>
               <p className="text-sm font-semibold text-red-900">Delete this sale request?</p>
               <p className="text-xs text-red-700 mt-1">This action cannot be undone. Only pending requests can be deleted.</p>
             </div>
           </div>
 
-          <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+          <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 border border-gray-100 dark:border-gray-800">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-xs font-bold text-gray-400 uppercase">Sale ID</span>
-              <span className="text-sm font-bold text-blue-600">{supplyToDelete?.saleId}</span>
+              <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase">Sale ID</span>
+              <span className="text-sm font-bold text-blue-600 dark:text-blue-400">{supplyToDelete?.saleId}</span>
             </div>
             <div className="flex justify-between items-center mb-2">
-              <span className="text-xs font-bold text-gray-400 uppercase">Customer</span>
-              <span className="text-sm font-bold text-gray-900">{supplyToDelete?.customerName}</span>
+              <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase">Customer</span>
+              <span className="text-sm font-bold text-gray-900 dark:text-gray-100">{supplyToDelete?.customerName}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-xs font-bold text-gray-400 uppercase">Total Amount</span>
+              <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase">Total Amount</span>
               <span className="text-sm font-bold text-green-700">₦{supplyToDelete?.totalAmount.toLocaleString()}</span>
             </div>
           </div>
@@ -897,7 +897,7 @@ export function SupplyPage() {
           <div className="flex justify-end gap-3 pt-4">
             <button
               onClick={() => { setShowDeleteModal(false); setSupplyToDelete(null); }}
-              className="px-5 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              className="px-5 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 transition-colors"
             >
               Cancel
             </button>
@@ -930,8 +930,8 @@ export function SupplyPage() {
           <div className="space-y-6">
             {/* Status & Rejection logic */}
             {selectedSupply.status === 'Rejected' && selectedSupply.rejectionReason && (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
+              <div className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 rounded-xl flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" />
                 <div>
                   <p className="text-sm font-bold text-red-900 uppercase tracking-tight">Rejection Reason</p>
                   <p className="text-sm text-red-700 mt-1 italic">"{selectedSupply.rejectionReason}"</p>
@@ -943,27 +943,27 @@ export function SupplyPage() {
             {selectedSupply.hasPendingEdit && selectedSupply.originalValues && (
               <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-4">
-                  <Clock className="w-5 h-5 text-purple-600" />
+                  <Clock className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   <h4 className="font-bold text-purple-900">Pending Edit Comparison</h4>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="bg-white/50 p-3 rounded-lg border border-purple-100">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">Original State (Approved)</p>
+                    <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase mb-2">Original State (Approved)</p>
                     <div className="space-y-2 text-sm">
                       {(() => {
                         const orig = JSON.parse(selectedSupply.originalValues);
                         return (
                           <>
                             <div className="flex justify-between border-b border-gray-50 pb-1">
-                              <span className="text-gray-500 italic">Volume:</span>
+                              <span className="text-gray-500 dark:text-gray-400 italic">Volume:</span>
                               <span className="font-medium">{orig.Quantity.toLocaleString()} L</span>
                             </div>
                             <div className="flex justify-between border-b border-gray-50 pb-1">
-                              <span className="text-gray-500 italic">Price/Litre:</span>
+                              <span className="text-gray-500 dark:text-gray-400 italic">Price/Litre:</span>
                               <span className="font-medium">₦{orig.PricePerLitre}</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-gray-500 italic">Date:</span>
+                              <span className="text-gray-500 dark:text-gray-400 italic">Date:</span>
                               <span className="font-medium">{new Date(orig.SupplyDate).toLocaleDateString('en-GB')}</span>
                             </div>
                           </>
@@ -972,18 +972,18 @@ export function SupplyPage() {
                     </div>
                   </div>
                   <div className="bg-white/50 p-3 rounded-lg border-2 border-purple-200">
-                    <p className="text-[10px] font-bold text-purple-600 uppercase mb-2">New Proposed State</p>
+                    <p className="text-[10px] font-bold text-purple-600 dark:text-purple-400 uppercase mb-2">New Proposed State</p>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between border-b border-purple-100 pb-1">
-                        <span className="text-purple-500 italic">Volume:</span>
+                        <span className="text-purple-500 dark:text-purple-400 italic">Volume:</span>
                         <span className="font-bold text-purple-900">{selectedSupply.quantity.toLocaleString()} L</span>
                       </div>
                       <div className="flex justify-between border-b border-purple-100 pb-1">
-                        <span className="text-purple-500 italic">Price/Litre:</span>
+                        <span className="text-purple-500 dark:text-purple-400 italic">Price/Litre:</span>
                         <span className="font-bold text-purple-900">₦{selectedSupply.pricePerLitre}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-purple-500 italic">Date:</span>
+                        <span className="text-purple-500 dark:text-purple-400 italic">Date:</span>
                         <span className="font-bold text-purple-900">{new Date(selectedSupply.supplyDate).toLocaleDateString('en-GB')}</span>
                       </div>
                     </div>
@@ -995,17 +995,17 @@ export function SupplyPage() {
                     <p className="text-sm text-purple-900 italic">"{selectedSupply.editReason}"</p>
                   </div>
                 )}
-                <p className="text-[10px] text-purple-500 mt-2 text-right">Edited by: {selectedSupply.editedByName}</p>
+                <p className="text-[10px] text-purple-500 dark:text-purple-400 mt-2 text-right">Edited by: {selectedSupply.editedByName}</p>
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
               <div>
-                <p className="text-xs font-bold text-gray-500 uppercase">Customer</p>
-                <p className="text-lg font-bold text-gray-900">{selectedSupply.customerName}</p>
+                <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Customer</p>
+                <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{selectedSupply.customerName}</p>
               </div>
               <div>
-                <p className="text-xs font-bold text-gray-500 uppercase">Status</p>
+                <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Status</p>
                 <div className="flex items-center gap-2 mt-1">
                   <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold uppercase ${selectedSupply.status === 'Approved' ? 'bg-green-100 text-green-700' :
                     selectedSupply.status === 'Rejected' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>
@@ -1019,50 +1019,50 @@ export function SupplyPage() {
                 </div>
               </div>
               <div>
-                <p className="text-xs font-bold text-gray-500 uppercase">Volume (L)</p>
-                <p className="text-lg font-bold text-gray-900">{selectedSupply.quantity.toLocaleString()} L</p>
+                <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Volume (L)</p>
+                <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{selectedSupply.quantity.toLocaleString()} L</p>
               </div>
               <div>
-                <p className="text-xs font-bold text-gray-500 uppercase">Total Amount</p>
+                <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Total Amount</p>
                 <p className="text-lg font-bold text-green-700">₦{selectedSupply.totalAmount.toLocaleString()}</p>
               </div>
-              <div className="col-span-2 border-t border-gray-100 pt-4 grid grid-cols-2 gap-4">
+              <div className="col-span-2 border-t border-gray-100 dark:border-gray-800 pt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs font-bold text-gray-500 uppercase">Truck</p>
-                  <p className="text-sm font-semibold text-gray-900">{selectedSupply.truckRegNumber}</p>
+                  <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Truck</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{selectedSupply.truckRegNumber}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-gray-500 uppercase">Driver</p>
-                  <p className="text-sm font-semibold text-gray-900">{selectedSupply.driverName}</p>
+                  <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Driver</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{selectedSupply.driverName}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-gray-500 uppercase">Supply Date</p>
-                  <p className="text-sm font-semibold text-gray-900">{new Date(selectedSupply.supplyDate).toLocaleDateString('en-GB')}</p>
+                  <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Supply Date</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{new Date(selectedSupply.supplyDate).toLocaleDateString('en-GB')}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-gray-500 uppercase">Created By</p>
-                  <p className="text-sm font-semibold text-gray-900">{selectedSupply.createdByName || 'N/A'}</p>
+                  <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Created By</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{selectedSupply.createdByName || 'N/A'}</p>
                 </div>
               </div>
             </div>
 
             {selectedSupply.invoiceUrl && (
-              <div className="space-y-2 border-t border-gray-100 pt-4">
+              <div className="space-y-2 border-t border-gray-100 dark:border-gray-800 pt-4">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-bold text-gray-700">Invoice / Proof of Sale</p>
+                  <p className="text-sm font-bold text-gray-700 dark:text-gray-300">Invoice / Proof of Sale</p>
                   <button
                     onClick={() => window.open(getFileUrl(selectedSupply.invoiceUrl), '_blank')}
-                    className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
                   >
                     <DownloadIcon className="w-3 h-3" />
                     Open Original
                   </button>
                 </div>
-                <div className="border border-gray-200 rounded-xl overflow-hidden bg-gray-50 p-2">
+                <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden bg-gray-50 dark:bg-gray-900/50 p-2">
                   <img
                     src={getFileUrl(selectedSupply.invoiceUrl)}
                     alt="Proof of Sale"
-                    className="w-full h-auto rounded-lg max-h-[500px] object-contain cursor-zoom-in bg-white"
+                    className="w-full h-auto rounded-lg max-h-[500px] object-contain cursor-zoom-in bg-white dark:bg-gray-800"
                     onClick={() => window.open(getFileUrl(selectedSupply.invoiceUrl), '_blank')}
                   />
                 </div>
@@ -1100,33 +1100,33 @@ export function SupplyPage() {
         size="md"
       >
         <div className="space-y-4">
-          <div className="p-4 bg-green-50 border border-green-100 rounded-lg flex items-start gap-3">
-            <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
+          <div className="p-4 bg-green-50 dark:bg-green-900/30 border border-green-100 rounded-lg flex items-start gap-3">
+            <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
             <div>
               <p className="text-sm font-semibold text-green-900">Approve this sale?</p>
               <p className="text-xs text-green-700 mt-1">This will deduct {supplyToApprove?.quantity.toLocaleString()} L from the depot.</p>
             </div>
           </div>
 
-          <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+          <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 border border-gray-100 dark:border-gray-800">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-xs font-bold text-gray-400 uppercase">Sale ID</span>
-              <span className="text-sm font-bold text-blue-600">{supplyToApprove?.saleId}</span>
+              <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase">Sale ID</span>
+              <span className="text-sm font-bold text-blue-600 dark:text-blue-400">{supplyToApprove?.saleId}</span>
             </div>
             <div className="flex justify-between items-center mb-2">
-              <span className="text-xs font-bold text-gray-400 uppercase">Customer</span>
-              <span className="text-sm font-bold text-gray-900">{supplyToApprove?.customerName}</span>
+              <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase">Customer</span>
+              <span className="text-sm font-bold text-gray-900 dark:text-gray-100">{supplyToApprove?.customerName}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-xs font-bold text-gray-400 uppercase">Volume</span>
-              <span className="text-sm font-bold text-gray-900">{supplyToApprove?.quantity.toLocaleString()} L</span>
+              <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase">Volume</span>
+              <span className="text-sm font-bold text-gray-900 dark:text-gray-100">{supplyToApprove?.quantity.toLocaleString()} L</span>
             </div>
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
             <button
               onClick={() => { setShowApproveModal(false); setSupplyToApprove(null); }}
-              className="px-5 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              className="px-5 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 transition-colors"
             >
               Cancel
             </button>
@@ -1152,35 +1152,35 @@ export function SupplyPage() {
       <Modal isOpen={showFilterModal} onClose={() => { setShowFilterModal(false); setModalError(null); }} title="Filter Sales" size="md">
         <div className="space-y-4">
           {modalError && (
-            <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center gap-2">
+            <div className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 text-red-700 rounded-lg flex items-center gap-2">
               <AlertCircle className="w-4 h-4" />
               <span>{modalError}</span>
             </div>
           )}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Start Date</label>
               <input
                 type="date"
                 value={dateFilter.startDate}
                 onChange={e => setDateFilter({ ...dateFilter, startDate: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">End Date</label>
               <input
                 type="date"
                 value={dateFilter.endDate}
                 onChange={e => setDateFilter({ ...dateFilter, endDate: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
               />
             </div>
           </div>
           <div className="flex gap-3 pt-4">
             <button
               onClick={() => { setFilteredSupplies(supplies); setShowFilterModal(false); }}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50"
             >
               Reset
             </button>
@@ -1198,29 +1198,29 @@ export function SupplyPage() {
       <Modal isOpen={showExportModal} onClose={() => { setShowExportModal(false); setModalError(null); }} title="Export Sales Data" size="md">
         <div className="space-y-4">
           {modalError && (
-            <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center gap-2">
+            <div className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 text-red-700 rounded-lg flex items-center gap-2">
               <AlertCircle className="w-4 h-4" />
               <span>{modalError}</span>
             </div>
           )}
-          <p className="text-sm text-gray-600">Select the date range for the CSV export.</p>
-          <div className="grid grid-cols-2 gap-4">
+          <p className="text-sm text-gray-600 dark:text-gray-400">Select the date range for the CSV export.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">From</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 font-bold uppercase tracking-widest text-[10px]">From</label>
               <input
                 type="date"
                 value={exportDateRange.startDate}
                 onChange={e => setExportDateRange({ ...exportDateRange, startDate: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-gray-100"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">To</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 font-bold uppercase tracking-widest text-[10px]">To</label>
               <input
                 type="date"
                 value={exportDateRange.endDate}
                 onChange={e => setExportDateRange({ ...exportDateRange, endDate: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-gray-100"
               />
             </div>
           </div>
@@ -1244,26 +1244,26 @@ export function SupplyPage() {
       >
         <div className="space-y-4">
           <div className="p-4 bg-purple-50 border border-purple-200 rounded-xl flex items-start gap-3">
-            <Info className="w-5 h-5 text-purple-600 mt-0.5" />
+            <Info className="w-5 h-5 text-purple-600 dark:text-purple-400 mt-0.5" />
             <div>
               <p className="text-sm font-bold text-purple-900 uppercase">Confirm Changes</p>
               <p className="text-xs text-purple-700 mt-1">Accepting this edit will update the approved sale record and adjust depot stock automatically.</p>
             </div>
           </div>
 
-          <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-2 text-sm">
+          <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-100 dark:border-gray-800 space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-500 font-medium italic">New Volume:</span>
-              <span className="font-bold text-gray-900">{selectedSupply?.quantity.toLocaleString()} L</span>
+              <span className="text-gray-500 dark:text-gray-400 font-medium italic">New Volume:</span>
+              <span className="font-bold text-gray-900 dark:text-gray-100">{selectedSupply?.quantity.toLocaleString()} L</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500 font-medium italic">New Total:</span>
+              <span className="text-gray-500 dark:text-gray-400 font-medium italic">New Total:</span>
               <span className="font-bold text-green-700">₦{selectedSupply?.totalAmount.toLocaleString()}</span>
             </div>
             {selectedSupply?.editReason && (
-              <div className="mt-4 pt-3 border-t border-gray-200">
-                <p className="text-xs font-bold text-gray-400 uppercase mb-1">Reason for Edit:</p>
-                <p className="text-sm italic text-gray-700 font-medium">"{selectedSupply.editReason}"</p>
+              <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+                <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase mb-1">Reason for Edit:</p>
+                <p className="text-sm italic text-gray-700 dark:text-gray-300 font-medium">"{selectedSupply.editReason}"</p>
               </div>
             )}
           </div>
@@ -1271,7 +1271,7 @@ export function SupplyPage() {
           <div className="flex justify-end gap-3 pt-4">
             <button
               onClick={() => { setShowApproveEditModal(false); setSelectedSupply(null); }}
-              className="px-5 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              className="px-5 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 transition-colors"
             >
               Cancel
             </button>
@@ -1305,7 +1305,7 @@ export function SupplyPage() {
           <div className="flex justify-end gap-3 pt-4">
             <button
               onClick={() => { setShowRejectEditModal(false); setSelectedSupply(null); }}
-              className="px-5 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              className="px-5 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 transition-colors"
             >
               Wait, Keep It
             </button>
@@ -1328,7 +1328,7 @@ export function SupplyPage() {
       >
         <div className="space-y-4">
           {modalError && (
-            <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center gap-2">
+            <div className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 text-red-700 rounded-lg flex items-center gap-2">
               <AlertCircle className="w-4 h-4" />
               <span>{modalError}</span>
             </div>
@@ -1342,11 +1342,11 @@ export function SupplyPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Rejection Reason</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Rejection Reason</label>
             <textarea
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[100px]"
+              className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-gray-100 placeholder-gray-400 min-h-[100px]"
               placeholder="e.g., Insufficient funds, incorrect quantity, etc."
               required
             />
@@ -1355,7 +1355,7 @@ export function SupplyPage() {
           <div className="flex justify-end gap-3 pt-4">
             <button
               onClick={() => { setShowRejectModal(false); setSupplyToReject(null); setRejectReason(''); }}
-              className="px-5 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              className="px-5 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 transition-colors"
             >
               Cancel
             </button>

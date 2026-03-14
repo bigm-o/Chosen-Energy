@@ -8,6 +8,7 @@ interface AuthContextType {
   token: string | null;
   login: (data: LoginRequest) => Promise<void>;
   logout: () => void;
+  updateTheme: (theme: 'light' | 'dark') => Promise<void>;
   isAuthenticated: boolean;
 }
 
@@ -67,7 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshAuthToken = useCallback(async () => {
     const storedToken = localStorage.getItem('token');
     const storedRefreshToken = localStorage.getItem('refreshToken');
-    
+
     if (!storedToken || !storedRefreshToken) {
       authNotifications.tokenExpired();
       logout();
@@ -83,13 +84,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response.success && response.data) {
         const newToken = response.data.token;
         const newRefreshToken = response.data.refreshToken;
-        
+
         localStorage.setItem('token', newToken);
         localStorage.setItem('refreshToken', newRefreshToken);
         setToken(newToken);
         setRefreshToken(newRefreshToken);
         setHasShownExpiryWarning(false);
-        
+
         authNotifications.tokenRefreshed();
         return true;
       } else {
@@ -110,18 +111,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const storedToken = localStorage.getItem('token');
     const storedRefreshToken = localStorage.getItem('refreshToken');
     const userData = localStorage.getItem('user');
-    
+
     if (storedToken && storedRefreshToken && userData) {
       if (isTokenExpired(storedToken)) {
         // Try to refresh the token
         refreshAuthToken();
         return;
       }
-      
+
       setToken(storedToken);
       setRefreshToken(storedRefreshToken);
       setUser(JSON.parse(userData));
-      
+
       // Set up automatic logout when token expires (with buffer)
       const expiration = getTokenExpiration(storedToken);
       if (expiration) {
@@ -131,7 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             authNotifications.tokenExpired();
             logout();
           }, timeUntilExpiry);
-          
+
           return () => clearTimeout(timeoutId);
         }
       }
@@ -141,7 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Periodic token validation and refresh (every 2 minutes)
   useEffect(() => {
     if (!token) return;
-    
+
     const interval = setInterval(async () => {
       if (isTokenExpired(token)) {
         authNotifications.tokenExpired();
@@ -153,7 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await refreshAuthToken();
       }
     }, 120000); // Check every 2 minutes
-    
+
     return () => clearInterval(interval);
   }, [token, logout, refreshAuthToken, hasShownExpiryWarning]);
 
@@ -166,15 +167,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         fullName: response.data.fullName,
         role: response.data.role as any,
         isActive: true,
+        themePreference: (response.data.themePreference as 'light' | 'dark') || 'light',
       };
       const newToken = response.data.token;
       const newRefreshToken = response.data.refreshToken;
-      
+
       // Validate token before storing
       if (isTokenExpired(newToken)) {
         throw new Error('Received expired token');
       }
-      
+
       localStorage.setItem('token', newToken);
       localStorage.setItem('refreshToken', newRefreshToken);
       localStorage.setItem('user', JSON.stringify(userData));
@@ -182,9 +184,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setRefreshToken(newRefreshToken);
       setUser(userData);
       setHasShownExpiryWarning(false);
-      
+
       authNotifications.loginSuccess();
-      
+
       // Set up automatic logout for new token
       const expiration = getTokenExpiration(newToken);
       if (expiration) {
@@ -201,8 +203,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateTheme = async (theme: 'light' | 'dark') => {
+    if (!user || !token) return;
+
+    // Optimistic UI update
+    const updatedUser = { ...user, themePreference: theme };
+    setUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+
+    try {
+      await authApi.updateTheme(token, theme);
+    } catch (error) {
+      console.error('Failed to save theme to backend', error);
+    }
+  };
+
+  // Apply theme on initial load when user is loaded
+  useEffect(() => {
+    if (user?.themePreference === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [user]);
+
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated: !!user && !!token }}>
+    <AuthContext.Provider value={{ user, token, login, logout, updateTheme, isAuthenticated: !!user && !!token }}>
       {children}
     </AuthContext.Provider>
   );

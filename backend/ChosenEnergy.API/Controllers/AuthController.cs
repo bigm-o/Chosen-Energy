@@ -50,7 +50,8 @@ public class AuthController : ControllerBase
             RefreshToken = refreshToken,
             Email = user.Email,
             FullName = user.FullName,
-            Role = user.Role.ToString()
+            Role = user.Role.ToString(),
+            ThemePreference = user.ThemePreference
         };
 
         return Ok(ApiResponse<LoginResponse>.SuccessResponse(response, "Login successful"));
@@ -76,7 +77,8 @@ public class AuthController : ControllerBase
             RefreshToken = refreshToken,
             Email = user.Email,
             FullName = user.FullName,
-            Role = user.Role.ToString()
+            Role = user.Role.ToString(),
+            ThemePreference = user.ThemePreference
         };
 
         return Ok(ApiResponse<LoginResponse>.SuccessResponse(response, "Registration successful"));
@@ -115,5 +117,24 @@ public class AuthController : ControllerBase
     {
         // If we reach here, the token is valid (middleware validated it)
         return Ok(ApiResponse<object>.SuccessResponse(new { valid = true }, "Token is valid"));
+    }
+
+    [HttpPut("theme")]
+    [Authorize]
+    public async Task<IActionResult> UpdateTheme([FromBody] ThemeUpdateRequest request)
+    {
+        var email = User.FindFirst(ClaimTypes.Email)?.Value;
+        if (string.IsNullOrEmpty(email))
+            return Unauthorized(ApiResponse<object>.ErrorResponse("Invalid token claims"));
+
+        var user = await _authService.GetUserByEmailAsync(email);
+        if (user == null)
+            return Unauthorized(ApiResponse<object>.ErrorResponse("User not found"));
+
+        var success = await _authService.UpdateThemeAsync(user.Id, request.ThemePreference);
+        if (!success)
+            return StatusCode(500, ApiResponse<object>.ErrorResponse("Failed to update theme preference"));
+
+        return Ok(ApiResponse<object>.SuccessResponse(new { theme = request.ThemePreference }, "Theme preference updated"));
     }
 }

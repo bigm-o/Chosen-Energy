@@ -107,6 +107,16 @@ public class TransloadsController : ControllerBase
         var results = await _transloadService.GetPendingConfirmationsAsync(driver.Id);
         return Ok(new { success = true, data = results });
     }
+
+    [HttpGet("my")]
+    public async Task<IActionResult> GetMyTransloads()
+    {
+        var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdStr)) return Unauthorized();
+
+        var results = await _transloadService.GetByDriverUserIdAsync(Guid.Parse(userIdStr));
+        return Ok(new { success = true, data = results });
+    }
 }
 
 public class RejectRequest { public string Reason { get; set; } = string.Empty; }

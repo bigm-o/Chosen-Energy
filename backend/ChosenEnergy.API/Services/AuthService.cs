@@ -10,6 +10,7 @@ public interface IAuthService
     Task<User?> AuthenticateAsync(string emailOrUsername, string password);
     Task<User?> GetUserByEmailAsync(string email);
     Task<User> CreateUserAsync(string email, string username, string password, string fullName, UserRole role);
+    Task<bool> UpdateThemeAsync(Guid id, string themePreference);
 }
 
 public class AuthService : IAuthService
@@ -56,5 +57,10 @@ public class AuthService : IAuthService
         };
 
         return await _userRepository.CreateAsync(user, passwordHash);
+    }
+
+    public async Task<bool> UpdateThemeAsync(Guid id, string themePreference)
+    {
+        return await _userRepository.UpdateThemeAsync(id, themePreference);
     }
 }

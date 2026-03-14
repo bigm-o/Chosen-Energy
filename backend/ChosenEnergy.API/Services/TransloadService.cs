@@ -11,6 +11,7 @@ public interface ITransloadService
     Task<Transload> ApproveAsync(Guid id, Guid userId);
     Task<Transload> RejectAsync(Guid id, Guid userId, string reason);
     Task<IEnumerable<Transload>> GetPendingConfirmationsAsync(Guid driverId);
+    Task<IEnumerable<Transload>> GetByDriverUserIdAsync(Guid userId);
     Task<IEnumerable<Transload>> GetAllAsync();
 }
 
@@ -164,6 +165,34 @@ public class TransloadService : ITransloadService
             WHERE t.receiving_driver_id = @DriverId AND t.is_confirmed_by_receiver = FALSE AND t.status = 'Pending'::approval_status";
         
         return await connection.QueryAsync<Transload>(sql, new { DriverId = driverId });
+    }
+
+    public async Task<IEnumerable<Transload>> GetByDriverUserIdAsync(Guid userId)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        var sql = @"
+            SELECT 
+                t.id as Id,
+                t.source_truck_id as SourceTruckId,
+                st.registration_number as SourceTruckReg,
+                t.destination_truck_id as DestinationTruckId,
+                dt.registration_number as DestinationTruckReg,
+                t.quantity as Quantity,
+                t.transfer_date as TransferDate,
+                t.status::text as Status,
+                t.is_confirmed_by_receiver as IsConfirmedByReceiver,
+                t.transload_type as TransloadType,
+                u.full_name as CreatedByName,
+                d.full_name as ReceivingDriverName
+            FROM transloading t
+            JOIN trucks st ON t.source_truck_id = st.id
+            JOIN trucks dt ON t.destination_truck_id = dt.id
+            JOIN users u ON t.created_by = u.id
+            JOIN drivers d ON t.receiving_driver_id = d.id
+            WHERE t.created_by = @UserId OR t.receiving_driver_id IN (SELECT id FROM drivers WHERE user_id = @UserId)
+            ORDER BY t.created_at DESC";
+        
+        return await connection.QueryAsync<Transload>(sql, new { UserId = userId });
     }
 
     public async Task<IEnumerable<Transload>> GetAllAsync()

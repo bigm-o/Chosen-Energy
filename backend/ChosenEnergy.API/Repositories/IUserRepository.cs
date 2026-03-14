@@ -10,5 +10,6 @@ public interface IUserRepository
     Task<User?> GetByIdAsync(Guid id);
     Task<User> CreateAsync(User user, string passwordHash);
     Task<User> UpdateAsync(User user);
+    Task<bool> UpdateThemeAsync(Guid id, string themePreference);
     Task<bool> DeleteAsync(Guid id);
 }

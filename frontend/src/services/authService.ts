@@ -15,6 +15,7 @@ export interface LoginResponse {
   email: string;
   fullName: string;
   role: string;
+  themePreference: string;
 }
 
 export interface RefreshTokenRequest {
@@ -62,6 +63,18 @@ export const authApi = {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
+    });
+    return response.json();
+  },
+
+  updateTheme: async (token: string, themePreference: string): Promise<ApiResponse<{ theme: string }>> => {
+    const response = await fetch(`${API_URL}/auth/theme`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ themePreference }),
     });
     return response.json();
   },

@@ -26,7 +26,8 @@ public class UserRepository : IUserRepository
                 role::text as Role,
                 is_active as IsActive,
                 created_at as CreatedAt,
-                updated_at as UpdatedAt
+                updated_at as UpdatedAt,
+                theme_preference as ThemePreference
             FROM users 
             WHERE (email = @EmailOrUsername OR username = @EmailOrUsername)";
         
@@ -46,7 +47,8 @@ public class UserRepository : IUserRepository
                 role::text as Role,
                 is_active as IsActive,
                 created_at as CreatedAt,
-                updated_at as UpdatedAt
+                updated_at as UpdatedAt,
+                theme_preference as ThemePreference
             FROM users 
             WHERE email = @Email";
         return await connection.QueryFirstOrDefaultAsync<User>(sql, new { Email = email });
@@ -64,7 +66,8 @@ public class UserRepository : IUserRepository
                 role::text as Role,
                 is_active as IsActive,
                 created_at as CreatedAt,
-                updated_at as UpdatedAt
+                updated_at as UpdatedAt,
+                theme_preference as ThemePreference
             FROM users 
             ORDER BY created_at DESC";
         return await connection.QueryAsync<User>(sql);
@@ -82,7 +85,8 @@ public class UserRepository : IUserRepository
                 role::text as Role,
                 is_active as IsActive,
                 created_at as CreatedAt,
-                updated_at as UpdatedAt
+                updated_at as UpdatedAt,
+                theme_preference as ThemePreference
             FROM users 
             WHERE id = @Id";
         return await connection.QueryFirstOrDefaultAsync<User>(sql, new { Id = id });
@@ -92,8 +96,8 @@ public class UserRepository : IUserRepository
     {
         using var connection = _connectionFactory.CreateConnection();
         var sql = @"
-            INSERT INTO users (email, username, password_hash, full_name, role, is_active)
-            VALUES (@Email, @Username, @PasswordHash, @FullName, @Role::user_role, true)
+            INSERT INTO users (email, username, password_hash, full_name, role, is_active, theme_preference)
+            VALUES (@Email, @Username, @PasswordHash, @FullName, @Role::user_role, true, 'light')
             RETURNING 
                 id as Id,
                 email as Email,
@@ -102,7 +106,8 @@ public class UserRepository : IUserRepository
                 role::text as Role,
                 is_active as IsActive,
                 created_at as CreatedAt,
-                updated_at as UpdatedAt";
+                updated_at as UpdatedAt,
+                theme_preference as ThemePreference";
 
         return await connection.QueryFirstAsync<User>(sql, new
         {
@@ -132,7 +137,8 @@ public class UserRepository : IUserRepository
                 role::text as Role,
                 is_active as IsActive,
                 created_at as CreatedAt,
-                updated_at as UpdatedAt";
+                updated_at as UpdatedAt,
+                theme_preference as ThemePreference";
 
         return await connection.QueryFirstAsync<User>(sql, new
         {
@@ -148,6 +154,14 @@ public class UserRepository : IUserRepository
         using var connection = _connectionFactory.CreateConnection();
         var sql = "UPDATE users SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE id = @Id";
         var affected = await connection.ExecuteAsync(sql, new { Id = id });
+        return affected > 0;
+    }
+
+    public async Task<bool> UpdateThemeAsync(Guid id, string themePreference)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        var sql = "UPDATE users SET theme_preference = @ThemePreference, updated_at = CURRENT_TIMESTAMP WHERE id = @Id";
+        var affected = await connection.ExecuteAsync(sql, new { Id = id, ThemePreference = themePreference });
         return affected > 0;
     }
 }

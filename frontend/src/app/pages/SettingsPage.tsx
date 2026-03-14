@@ -70,15 +70,15 @@ export function SettingsPage() {
     return (
         <div className="max-w-4xl mx-auto space-y-8 animate-in slide-in-from-bottom duration-500">
             <div>
-                <h1 className="text-2xl font-black text-gray-900 flex items-center gap-3">
-                    <Settings className="w-6 h-6 text-blue-600" /> System Configurations
+                <h1 className="text-2xl font-black text-gray-900 dark:text-gray-100 flex items-center gap-3">
+                    <Settings className="w-6 h-6 text-blue-600 dark:text-blue-400" /> System Configurations
                 </h1>
-                <p className="text-gray-500 mt-1 font-semibold">Manage global parameters and pricing rules.</p>
+                <p className="text-gray-500 dark:text-gray-400 mt-1 font-semibold">Manage global parameters and pricing rules.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {settings.map(s => (
-                    <div key={s.key} className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm relative overflow-hidden group">
+                    <div key={s.key} className="bg-white dark:bg-gray-800 rounded-3xl p-8 border border-gray-100 dark:border-gray-800 shadow-sm relative overflow-hidden group">
                         <div className="absolute right-0 top-0 w-32 h-32 bg-blue-50/50 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform duration-700" />
 
                         <div className="relative z-10">
@@ -87,17 +87,17 @@ export function SettingsPage() {
                                     {s.key === 'DieselSellingPrice' ? <DollarSign className="w-5 h-5" /> : <Settings className="w-5 h-5" />}
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-black text-gray-900 tracking-tight">{s.key.replace(/([A-Z])/g, ' $1').trim()}</h3>
-                                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Global Parameter</span>
+                                    <h3 className="text-sm font-black text-gray-900 dark:text-gray-100 tracking-tight">{s.key.replace(/([A-Z])/g, ' $1').trim()}</h3>
+                                    <span className="text-[10px] text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest">Global Parameter</span>
                                 </div>
                             </div>
 
                             <div className="space-y-6">
                                 <div>
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Current Value</label>
-                                    <p className="text-3xl font-black text-gray-900 tracking-tighter">
+                                    <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest block mb-2">Current Value</label>
+                                    <p className="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tighter">
                                         {s.key.includes('Price') ? `₦${parseFloat(s.value).toLocaleString()}` : s.value}
-                                        <span className="text-xs text-gray-400 ml-2 font-bold uppercase tracking-widest">/ Litre</span>
+                                        <span className="text-xs text-gray-400 dark:text-gray-500 ml-2 font-bold uppercase tracking-widest">/ Litre</span>
                                     </p>
                                 </div>
 
@@ -113,13 +113,13 @@ export function SettingsPage() {
 
                                 <div className="pt-6 border-t border-gray-50 space-y-4">
                                     <div>
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-3">Update Value</label>
+                                        <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest block mb-3">Update Value</label>
                                         <div className="flex gap-2">
                                             <input
                                                 type="number"
                                                 id={`input-${s.key}`}
                                                 placeholder="New Value"
-                                                className="flex-1 p-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-black outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                                                className="flex-1 p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 rounded-2xl text-sm font-black outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all"
                                             />
                                             <button
                                                 onClick={() => {
@@ -150,7 +150,7 @@ export function SettingsPage() {
             </div>
 
             <div className="p-6 bg-blue-50 border border-blue-100 rounded-[2rem] flex items-start gap-4">
-                <Info className="w-6 h-6 text-blue-600 mt-1" />
+                <Info className="w-6 h-6 text-blue-600 dark:text-blue-400 mt-1" />
                 <div>
                     <h4 className="text-sm font-black text-blue-900 uppercase tracking-tight">Security Protocol</h4>
                     <p className="text-xs text-blue-700 font-semibold mt-1 leading-relaxed">

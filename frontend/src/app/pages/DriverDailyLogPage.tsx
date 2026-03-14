@@ -83,9 +83,11 @@ export function DriverDailyLogPage() {
     if (showAddDispatch) {
       fetchCustomers();
       fetchTrucks();
-      fetchDriverProfile();
+      if (user?.role === 'Driver') {
+        fetchDriverProfile();
+      }
     }
-  }, [showAddDispatch]);
+  }, [showAddDispatch, user?.role]);
 
   const fetchDailyLog = async (date: Date) => {
     setLoading(true);
@@ -166,7 +168,7 @@ export function DriverDailyLogPage() {
       // Balance Check
       const qty = parseFloat(formData.quantity);
       if (qty > (dailyLog?.availableLoad || 0)) {
-        toast.error(`Insufficient load. Available: ${dailyLog?.availableLoad.toLocaleString()} L`);
+        toast.error(`Insufficient load. Available: ${(dailyLog?.availableLoad || 0).toLocaleString()} L`);
         return;
       }
 
@@ -282,29 +284,29 @@ export function DriverDailyLogPage() {
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
       {/* Top Bar */}
-      <div className="bg-white border-b border-gray-100 px-4 py-4 flex items-center justify-between sticky top-0 z-40 shadow-sm">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-800 px-4 py-4 flex items-center justify-between sticky top-0 z-40 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold shadow-lg shadow-blue-200">CE</div>
           <div>
-            <h1 className="text-sm font-bold text-gray-900 leading-none">Fleet Operations</h1>
-            <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-wider font-semibold">Driver Portal</p>
+            <h1 className="text-sm font-bold text-gray-900 dark:text-gray-100 leading-none">Fleet Operations</h1>
+            <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1 uppercase tracking-wider font-semibold">Driver Portal</p>
           </div>
         </div>
         <button
           onClick={() => setShowProfile(!showProfile)}
-          className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100"
+          className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 dark:text-blue-400 border border-blue-100"
         >
           <User className="w-5 h-5" />
         </button>
       </div>
 
       {showProfile && (
-        <div className="absolute top-[72px] right-4 bg-white rounded-2xl shadow-2xl border border-gray-100 w-64 z-50 p-2 animate-in fade-in zoom-in-95">
+        <div className="absolute top-[72px] right-4 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-800 w-64 z-50 p-2 animate-in fade-in zoom-in-95">
           <div className="p-4 border-b border-gray-50 mb-2">
             <p className="text-sm font-bold">{user?.fullName}</p>
-            <p className="text-xs text-gray-400">{driverProfile?.truckRegistration} ({driverProfile?.truckType})</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500">{driverProfile?.truckRegistration} ({driverProfile?.truckType})</p>
           </div>
-          <button onClick={logout} className="w-full p-3 text-left text-sm text-red-600 hover:bg-red-50 rounded-xl flex items-center gap-3">
+          <button onClick={logout} className="w-full p-3 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 rounded-xl flex items-center gap-3">
             <LogOut className="w-4 h-4" /> Sign Out
           </button>
         </div>
@@ -313,7 +315,7 @@ export function DriverDailyLogPage() {
       <main className="max-w-md mx-auto pb-24 px-4">
         {/* Date Nav */}
         <div className="py-6">
-          <div className="bg-white p-2 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
+          <div className="bg-white dark:bg-gray-800 p-2 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm flex items-center justify-between">
             <button onClick={() => navigateDate('prev')} className="p-3 hover:bg-gray-50 rounded-xl"><ChevronLeft /></button>
             <div className="text-center">
               <p className="text-sm font-bold">{currentDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</p>
@@ -356,7 +358,7 @@ export function DriverDailyLogPage() {
             <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-green-500" /> Inward Fuel
             </h2>
-            <span className="text-[10px] font-black text-green-600 bg-green-50 px-2 py-1 rounded-lg uppercase tracking-wider">Stock In</span>
+            <span className="text-[10px] font-black text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded-lg uppercase tracking-wider">Stock In</span>
           </div>
 
           <div className="space-y-3">
@@ -366,14 +368,14 @@ export function DriverDailyLogPage() {
                 <p className="text-[10px] font-black uppercase">Loading Stock...</p>
               </div>
             ) : dailyLog?.logs.filter(l => l.type.includes('In') || l.type.includes('Load') || l.type.toLowerCase().includes('disbursement') || l.type.includes('Rollover')).length === 0 ? (
-              <div className="bg-white border border-dashed border-slate-200 rounded-2xl py-8 text-center">
+              <div className="bg-white dark:bg-gray-800 border border-dashed border-slate-200 rounded-2xl py-8 text-center">
                 <p className="text-[10px] text-slate-400 font-bold uppercase">No Inward records</p>
               </div>
             ) : (
               dailyLog?.logs
                 .filter(l => l.type.includes('In') || l.type.includes('Load') || l.type.toLowerCase().includes('disbursement') || l.type.includes('Rollover'))
                 .map((log) => (
-                  <div key={log.id} className="bg-white border-l-4 border-l-green-500 border-y border-r border-slate-100 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                  <div key={log.id} className="bg-white dark:bg-gray-800 border-l-4 border-l-green-500 border-y border-r border-slate-100 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
                     <div className="flex justify-between items-start">
                       <div>
                         <p className="text-xs font-bold text-slate-900">{log.type === 'Company Load' ? 'Disbursement' : log.title}</p>
@@ -382,7 +384,7 @@ export function DriverDailyLogPage() {
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-black text-green-600">+{log.quantity.toLocaleString()} L</p>
+                        <p className="text-sm font-black text-green-600 dark:text-green-400">+{(log.quantity || 0).toLocaleString()} L</p>
                         <span className={`text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest ${log.status === 'Approved' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
                           }`}>
                           {log.status === 'Pending' && log.type.includes('Transload') && !log.isConfirmed ? 'Confirm Needed' : log.status}
@@ -405,17 +407,17 @@ export function DriverDailyLogPage() {
                 <Fuel className="w-6 h-6 text-blue-400" />
               </div>
               <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Operational Balance</p>
-              <h2 className="text-5xl font-black tracking-tight">{dailyLog?.availableLoad.toLocaleString() ?? '0'}<span className="text-xl ml-1 text-slate-500 font-bold">L</span></h2>
+              <h2 className="text-5xl font-black tracking-tight">{(dailyLog?.availableLoad || 0).toLocaleString()}<span className="text-xl ml-1 text-slate-500 font-bold">L</span></h2>
 
               <div className="w-full mt-10 pt-8 border-t border-slate-800/50 flex items-center justify-center gap-12">
                 <div className="text-center">
                   <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">Stock In</p>
-                  <p className="text-lg font-black text-green-400">+{(dailyLog?.totalInToday ?? 0).toLocaleString()} L</p>
+                  <p className="text-lg font-black text-green-400">+{(dailyLog?.totalInToday || 0).toLocaleString()} L</p>
                 </div>
                 <div className="w-[1px] h-8 bg-slate-800" />
                 <div className="text-center">
                   <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">Stock Out</p>
-                  <p className="text-lg font-black text-rose-400">-{(dailyLog?.totalOutToday ?? 0).toLocaleString()} L</p>
+                  <p className="text-lg font-black text-rose-400">-{(dailyLog?.totalOutToday || 0).toLocaleString()} L</p>
                 </div>
               </div>
             </div>
@@ -438,7 +440,7 @@ export function DriverDailyLogPage() {
                 <p className="text-[10px] font-black uppercase">Syncing Sales...</p>
               </div>
             ) : dailyLog?.logs.filter(l => l.type === 'Sale' || l.type.includes('Out') || l.type.includes('Supply')).length === 0 ? (
-              <div className="bg-white border border-dashed border-slate-200 rounded-2xl py-12 text-center">
+              <div className="bg-white dark:bg-gray-800 border border-dashed border-slate-200 rounded-2xl py-12 text-center">
                 <ShoppingCart className="w-8 h-8 text-slate-200 mx-auto mb-2 opacity-20" />
                 <p className="text-[10px] text-slate-400 font-bold uppercase">No dispatch activity</p>
               </div>
@@ -446,7 +448,7 @@ export function DriverDailyLogPage() {
               dailyLog?.logs
                 .filter(l => l.type === 'Sale' || l.type.includes('Out') || l.type.includes('Supply'))
                 .map((log) => (
-                  <div key={log.id} className="bg-white border-l-4 border-l-rose-500 border-y border-r border-slate-100 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                  <div key={log.id} className="bg-white dark:bg-gray-800 border-l-4 border-l-rose-500 border-y border-r border-slate-100 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex gap-3">
                         <div className="p-2 bg-rose-50 rounded-xl text-rose-600">
@@ -466,12 +468,12 @@ export function DriverDailyLogPage() {
                     <div className="flex justify-between items-end border-t border-slate-50 pt-3">
                       <div>
                         <p className="text-[9px] text-slate-400 font-black uppercase mb-0.5">Quantity</p>
-                        <p className="text-sm font-black text-rose-600">-{log.quantity.toLocaleString()} L</p>
+                        <p className="text-sm font-black text-rose-600">-{(log.quantity || 0).toLocaleString()} L</p>
                       </div>
                       {log.value > 0 && (
                         <div className="text-right">
                           <p className="text-[9px] text-slate-400 font-black uppercase mb-0.5">Revenue Impact</p>
-                          <p className="text-sm font-black text-slate-900">₦{log.value.toLocaleString()}</p>
+                          <p className="text-sm font-black text-slate-900">₦{(log.value || 0).toLocaleString()}</p>
                         </div>
                       )}
                     </div>
@@ -501,13 +503,13 @@ export function DriverDailyLogPage() {
           <div className="flex p-1 bg-slate-100 rounded-xl">
             <button
               onClick={() => setDispatchType('Sale')}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all ${dispatchType === 'Sale' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500'}`}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all ${dispatchType === 'Sale' ? 'bg-white dark:bg-gray-800 shadow-sm text-blue-600' : 'text-slate-500'}`}
             >
               <ShoppingCart className="w-4 h-4" /> Supply to Customer
             </button>
             <button
               onClick={() => setDispatchType('Transload')}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all ${dispatchType === 'Transload' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500'}`}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all ${dispatchType === 'Transload' ? 'bg-white dark:bg-gray-800 shadow-sm text-blue-600' : 'text-slate-500'}`}
             >
               <ArrowLeftRight className="w-4 h-4" /> Transload to Truck
             </button>
@@ -530,7 +532,7 @@ export function DriverDailyLogPage() {
                   </div>
 
                   {showCustomerDropdown && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-100 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-slate-100 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
                       <div className="p-2 border-b border-slate-50">
                         <input
                           autoFocus
@@ -561,7 +563,7 @@ export function DriverDailyLogPage() {
                             className="w-full p-4 text-left text-sm font-bold text-slate-900 border-t border-slate-50 hover:bg-blue-50 transition-colors flex items-center justify-between"
                           >
                             {c.companyName}
-                            {formData.customerId === c.id && <CheckCircle className="w-4 h-4 text-blue-600" />}
+                            {formData.customerId === c.id && <CheckCircle className="w-4 h-4 text-blue-600 dark:text-blue-400" />}
                           </button>
                         ))}
                       </div>
@@ -587,7 +589,7 @@ export function DriverDailyLogPage() {
                   </div>
 
                   {showTruckDropdown && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-100 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-slate-100 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
                       <div className="p-2 border-b border-slate-50">
                         <input
                           autoFocus
@@ -619,7 +621,7 @@ export function DriverDailyLogPage() {
                                 <span>{t.registrationNumber}</span>
                                 <span className="text-[10px] text-slate-400 uppercase tracking-widest">{t.driverName || 'No Assigned Driver'}</span>
                               </div>
-                              {formData.destTruckId === t.id && <CheckCircle className="w-4 h-4 text-blue-600" />}
+                              {formData.destTruckId === t.id && <CheckCircle className="w-4 h-4 text-blue-600 dark:text-blue-400" />}
                             </button>
                           ))}
                       </div>
@@ -654,7 +656,7 @@ export function DriverDailyLogPage() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-4">
-                    <button type="button" onClick={() => cameraInputRef.current?.click()} className="flex flex-col items-center gap-2 p-6 bg-blue-50 border border-blue-100 rounded-2xl text-blue-600 active:scale-95 transition-all">
+                    <button type="button" onClick={() => cameraInputRef.current?.click()} className="flex flex-col items-center gap-2 p-6 bg-blue-50 border border-blue-100 rounded-2xl text-blue-600 dark:text-blue-400 active:scale-95 transition-all">
                       <Camera className="w-6 h-6" /> <span className="text-[10px] font-black uppercase">Camera</span>
                     </button>
                     <button type="button" onClick={() => fileInputRef.current?.click()} className="flex flex-col items-center gap-2 p-6 bg-slate-50 border border-slate-100 rounded-2xl text-slate-600 active:scale-95 transition-all">

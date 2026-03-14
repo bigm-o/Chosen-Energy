@@ -16,7 +16,7 @@ export function Layout({ children, currentPage, setCurrentPage, userRole, userNa
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden relative">
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-950 overflow-hidden relative transition-colors">
       {/* Mobile Backdrop */}
       {mobileMenuOpen && (
         <div

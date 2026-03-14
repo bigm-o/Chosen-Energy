@@ -43,6 +43,18 @@ public class DailyLogsController : ControllerBase
         }
     }
 
+    [HttpGet("truck/{truckId}/{date}")]
+    [Authorize(Roles = "Admin")] // Assuming only Admins can request detailed logs for any truck
+    public async Task<IActionResult> GetDetailedTruckLog(Guid truckId, DateTime date)
+    {
+        var log = await _dailyLogService.GetDetailedLogByTruckAsync(truckId, date);
+        if (log == null)
+        {
+            return NotFound(new { success = false, message = "No detailed log found for the specified truck and date." });
+        }
+        return Ok(new { success = true, data = log });
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetCurrent()
     {

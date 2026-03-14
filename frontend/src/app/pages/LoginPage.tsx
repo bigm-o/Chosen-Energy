@@ -24,7 +24,7 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex bg-white selection:bg-blue-100">
+    <div className="min-h-screen flex bg-white dark:bg-gray-800 selection:bg-blue-100">
       {/* Left side - Truck Visual Section */}
       <div className="hidden lg:flex lg:w-[55%] relative overflow-hidden bg-gray-900">
         <div className="absolute inset-0">
@@ -68,7 +68,7 @@ export function LoginPage() {
             </div>
           </div>
 
-          <div className="mt-12 flex items-center gap-4 text-gray-400 text-xs font-bold uppercase tracking-widest drop-shadow">
+          <div className="mt-12 flex items-center gap-4 text-gray-400 dark:text-gray-500 text-xs font-bold uppercase tracking-widest drop-shadow">
             <Activity className="w-4 h-4 text-blue-400" />
             <span>Systems Online • Powered by Chosen Energy v2.0</span>
           </div>
@@ -86,42 +86,42 @@ export function LoginPage() {
           </div>
 
           <div className="mb-10 text-center lg:text-left">
-            <h2 className="text-3xl font-black text-gray-900 mb-2 tracking-tight">Welcome Back</h2>
-            <p className="text-gray-500 font-medium">Please enter your credentials to continue</p>
+            <h2 className="text-3xl font-black text-gray-900 dark:text-gray-100 mb-2 tracking-tight">Welcome Back</h2>
+            <p className="text-gray-500 dark:text-gray-400 font-medium">Please enter your credentials to continue</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <label htmlFor="email" className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">
+              <label htmlFor="email" className="text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest ml-1">
                 Access Identifier
               </label>
               <div className="relative group">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500 group-focus-within:text-blue-500 transition-colors" />
                 <input
                   id="email"
                   type="text"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Email or Username"
-                  className="w-full pl-12 pr-4 h-14 bg-gray-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all font-semibold text-gray-900 placeholder:text-gray-300"
+                  className="w-full pl-12 pr-4 h-14 bg-gray-50 dark:bg-gray-900/50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all font-semibold text-gray-900 dark:text-gray-100 placeholder:text-gray-300"
                   required
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="password" className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">
+              <label htmlFor="password" className="text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest ml-1">
                 Security Key
               </label>
               <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500 group-focus-within:text-blue-500 transition-colors" />
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-12 pr-12 h-14 bg-gray-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all font-semibold text-gray-900 placeholder:text-gray-300"
+                  className="w-full pl-12 pr-12 h-14 bg-gray-50 dark:bg-gray-900/50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all font-semibold text-gray-900 dark:text-gray-100 placeholder:text-gray-300"
                   required
                 />
                 <button
@@ -136,10 +136,10 @@ export function LoginPage() {
 
             <div className="flex items-center justify-between px-1">
               <label className="flex items-center gap-2 cursor-pointer group">
-                <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500/20" />
-                <span className="text-xs font-bold text-gray-500 group-hover:text-gray-700 transition-colors">Keep me signed in</span>
+                <input type="checkbox" className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500/20" />
+                <span className="text-xs font-bold text-gray-500 dark:text-gray-400 group-hover:text-gray-700 transition-colors">Keep me signed in</span>
               </label>
-              <button type="button" className="text-xs font-bold text-blue-600 hover:text-blue-700">Forgot Password?</button>
+              <button type="button" className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700">Forgot Password?</button>
             </div>
 
             <button
@@ -161,7 +161,7 @@ export function LoginPage() {
           </form>
 
           <div className="mt-20 text-center">
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">
+            <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">
               © 2026 Chosen Energy Limited. All systems encrypted.
             </p>
           </div>

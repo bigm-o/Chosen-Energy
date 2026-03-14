@@ -6,6 +6,7 @@ export interface User {
   fullName: string;
   role: UserRole;
   isActive: boolean;
+  themePreference?: 'light' | 'dark';
 }
 
 export interface ApiResponse<T> {

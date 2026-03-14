@@ -119,7 +119,7 @@ export function MaintenancePage() {
     const totalCost = maintenanceLogs.reduce((sum, l) => sum + l.cost, 0);
 
     return (
-        <div className="space-y-6">
+        <div id="log-maintenance" className="space-y-6">
             <PageHeader
                 title="Fleet Maintenance"
                 subtitle="Track repairs and preventive maintenance for all company tankers"
@@ -132,33 +132,33 @@ export function MaintenancePage() {
 
             {/* Maintenance Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-800 p-5 shadow-sm">
                     <div className="flex items-center gap-3 mb-1">
                         <div className="w-2 h-2 rounded-full bg-red-500" />
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">In Workshop</p>
+                        <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">In Workshop</p>
                     </div>
-                    <p className="text-2xl font-black text-gray-900">{inWorkshop}</p>
+                    <p className="text-2xl font-black text-gray-900 dark:text-gray-100">{inWorkshop}</p>
                 </div>
-                <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-800 p-5 shadow-sm">
                     <div className="flex items-center gap-3 mb-1">
                         <div className="w-2 h-2 rounded-full bg-green-500" />
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Completed (Month)</p>
+                        <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Completed (Month)</p>
                     </div>
-                    <p className="text-2xl font-black text-gray-900">{completedMonth}</p>
+                    <p className="text-2xl font-black text-gray-900 dark:text-gray-100">{completedMonth}</p>
                 </div>
-                <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Total Maintenance Cost</p>
-                    <p className="text-2xl font-black text-blue-600">₦{(totalCost / 1000000).toFixed(2)}M</p>
+                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-800 p-5 shadow-sm">
+                    <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Total Maintenance Cost</p>
+                    <p className="text-2xl font-black text-blue-600 dark:text-blue-400">₦{(totalCost / 1000000).toFixed(2)}M</p>
                 </div>
             </div>
 
             {maintenanceLogs.length === 0 && !loading ? (
-                <div className="bg-white rounded-2xl border border-dashed border-gray-200 py-32 text-center">
-                    <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700 py-32 text-center">
+                    <div className="w-20 h-20 bg-gray-50 dark:bg-gray-900/50 rounded-full flex items-center justify-center mx-auto mb-6">
                         <Wrench className="w-10 h-10 text-gray-300" />
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">No Maintenance Logs</h3>
-                    <p className="text-gray-500 max-w-sm mx-auto">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">No Maintenance Logs</h3>
+                    <p className="text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
                         Start tracking fleet health by logging a new maintenance entry.
                     </p>
                     <button
@@ -169,31 +169,65 @@ export function MaintenancePage() {
                     </button>
                 </div>
             ) : (
-                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-                    <table className="w-full">
-                        <thead className="bg-gray-50 border-b border-gray-200">
-                            <tr>
-                                <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">Truck</th>
-                                <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">Type</th>
-                                <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">Description</th>
-                                <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">Cost</th>
-                                <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">Status</th>
-                                <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">Scheduled</th>
-                                <th className="text-right py-3 px-4 text-xs font-bold text-gray-500 uppercase">Action</th>
+                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
+                    {/* Mobile Card View */}
+                    <div className="md:hidden divide-y divide-gray-100 dark:divide-gray-800">
+                        {maintenanceLogs.map((log) => (
+                            <div key={log.id} className="p-4 space-y-3">
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <p className="font-bold text-gray-900 dark:text-gray-100">{log.truckRegNumber}</p>
+                                        <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">{log.type}</p>
+                                    </div>
+                                    <span className={`px-2 py-0.5 text-[10px] font-bold rounded-md ${log.status === 'Completed' ? 'bg-green-100 text-green-700' :
+                                        log.status === 'InProgress' ? 'bg-blue-100 text-blue-700' :
+                                            'bg-yellow-100 text-yellow-700'
+                                        }`}>
+                                        {log.status}
+                                    </span>
+                                </div>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">{log.description}</p>
+                                <div className="flex justify-between items-center text-sm">
+                                    <p className="font-bold text-gray-900 dark:text-gray-100">₦{log.cost.toLocaleString()}</p>
+                                    <p className="text-gray-500">{new Date(log.scheduledDate).toLocaleDateString()}</p>
+                                </div>
+                                {log.status !== 'Completed' && (
+                                    <button
+                                        onClick={() => handleComplete(log.id)}
+                                        className="w-full py-2.5 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-xl border border-green-100 hover:bg-green-100 text-xs font-bold flex items-center justify-center gap-2"
+                                    >
+                                        <CheckCircle className="w-4 h-4" /> Mark Completed
+                                    </button>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Desktop Table View */}
+                    <table className="hidden md:table w-full">
+                        <thead>
+                            <tr className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+                                <th className="text-left py-3 px-4 text-xs font-bold text-gray-700 dark:text-gray-200 uppercase">Truck</th>
+                                <th className="text-left py-3 px-4 text-xs font-bold text-gray-700 dark:text-gray-200 uppercase">Type</th>
+                                <th className="text-left py-3 px-4 text-xs font-bold text-gray-700 dark:text-gray-200 uppercase">Description</th>
+                                <th className="text-left py-3 px-4 text-xs font-bold text-gray-700 dark:text-gray-200 uppercase">Cost</th>
+                                <th className="text-left py-3 px-4 text-xs font-bold text-gray-700 dark:text-gray-200 uppercase">Status</th>
+                                <th className="text-left py-3 px-4 text-xs font-bold text-gray-700 dark:text-gray-200 uppercase">Scheduled</th>
+                                <th className="text-right py-3 px-4 text-xs font-bold text-gray-700 dark:text-gray-200 uppercase">Action</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100">
+                        <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                             {maintenanceLogs.map((log) => (
                                 <tr key={log.id} className="hover:bg-gray-50 transition-colors">
-                                    <td className="py-3 px-4 font-bold text-gray-900">{log.truckRegNumber}</td>
+                                    <td className="py-3 px-4 font-bold text-gray-900 dark:text-gray-100">{log.truckRegNumber}</td>
                                     <td className="py-3 px-4">
                                         <div className="flex items-center gap-2">
-                                            {log.type === 'Preventive' ? <CheckCircle className="w-4 h-4 text-blue-500" /> : <AlertTriangle className="w-4 h-4 text-red-500" />}
-                                            <span className="text-sm text-gray-700">{log.type}</span>
+                                            {log.type === 'Preventive' ? <CheckCircle className="w-4 h-4 text-blue-500 dark:text-blue-400" /> : <AlertTriangle className="w-4 h-4 text-red-500 dark:text-red-400" />}
+                                            <span className="text-sm text-gray-700 dark:text-gray-300">{log.type}</span>
                                         </div>
                                     </td>
-                                    <td className="py-3 px-4 text-sm text-gray-600 max-w-xs truncate">{log.description}</td>
-                                    <td className="py-3 px-4 text-sm font-bold text-gray-900">₦{log.cost.toLocaleString()}</td>
+                                    <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400 max-w-xs truncate">{log.description}</td>
+                                    <td className="py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100">₦{log.cost.toLocaleString()}</td>
                                     <td className="py-3 px-4">
                                         <span className={`px-2 py-1 text-xs font-bold rounded-md ${log.status === 'Completed' ? 'bg-green-100 text-green-700' :
                                             log.status === 'InProgress' ? 'bg-blue-100 text-blue-700' :
@@ -202,12 +236,12 @@ export function MaintenancePage() {
                                             {log.status}
                                         </span>
                                     </td>
-                                    <td className="py-3 px-4 text-sm text-gray-600">{new Date(log.scheduledDate).toLocaleDateString()}</td>
+                                    <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">{new Date(log.scheduledDate).toLocaleDateString()}</td>
                                     <td className="py-3 px-4 text-right">
                                         {log.status !== 'Completed' && (
                                             <button
                                                 onClick={() => handleComplete(log.id)}
-                                                className="text-green-600 hover:text-green-800 text-sm font-bold flex items-center gap-1 justify-end ml-auto"
+                                                className="text-green-600 dark:text-green-400 hover:text-green-800 text-sm font-bold flex items-center gap-1 justify-end ml-auto"
                                             >
                                                 <CheckCircle className="w-4 h-4" /> Complete
                                             </button>
@@ -223,11 +257,11 @@ export function MaintenancePage() {
             <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="Log Truck Maintenance" size="md">
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Select Tanker</label>
+                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Select Tanker</label>
                         <select
                             value={formData.truckId}
                             onChange={e => setFormData({ ...formData, truckId: e.target.value })}
-                            className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-gray-900 dark:text-white"
                             required
                         >
                             <option value="">Select Truck</option>
@@ -237,14 +271,14 @@ export function MaintenancePage() {
                         </select>
                     </div>
                     <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Service Type</label>
-                        <div className="grid grid-cols-2 gap-2">
+                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Service Type</label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             <button
                                 type="button"
                                 onClick={() => setFormData({ ...formData, type: 'Preventive' })}
                                 className={`p-3 border rounded-xl text-xs font-bold flex flex-col items-center gap-2 transition-colors ${formData.type === 'Preventive'
-                                    ? 'border-blue-600 bg-blue-50 text-blue-700'
-                                    : 'border-gray-100 bg-gray-50 text-gray-400 hover:bg-gray-100'
+                                    ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'
+                                    : 'border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 text-gray-400 hover:bg-gray-100'
                                     }`}
                             >
                                 <Wrench className="w-4 h-4" />
@@ -254,8 +288,8 @@ export function MaintenancePage() {
                                 type="button"
                                 onClick={() => setFormData({ ...formData, type: 'Breakdown' })}
                                 className={`p-3 border rounded-xl text-xs font-bold flex flex-col items-center gap-2 transition-colors ${formData.type === 'Breakdown'
-                                    ? 'border-red-600 bg-red-50 text-red-700'
-                                    : 'border-gray-100 bg-gray-50 text-gray-400 hover:bg-gray-100'
+                                    ? 'border-red-600 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400'
+                                    : 'border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 text-gray-400 hover:bg-gray-100'
                                     }`}
                             >
                                 <AlertTriangle className="w-4 h-4" />
@@ -264,28 +298,28 @@ export function MaintenancePage() {
                         </div>
                     </div>
                     <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Estimated Cost (₦)</label>
+                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Estimated Cost (₦)</label>
                         <input
                             type="number"
                             value={formData.cost}
                             onChange={e => setFormData({ ...formData, cost: e.target.value })}
-                            className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-gray-900 dark:text-gray-100"
                             placeholder="0"
                             required
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Description</label>
+                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Description</label>
                         <textarea
                             value={formData.description}
                             onChange={e => setFormData({ ...formData, description: e.target.value })}
-                            className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-lg h-24 focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 rounded-lg h-24 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-gray-900 dark:text-gray-100"
                             placeholder="Brief details of service..."
                             required
                         />
                     </div>
                     <div className="flex gap-3 pt-4">
-                        <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 py-3 border border-gray-200 rounded-xl font-bold text-gray-500 hover:bg-gray-50">Cancel</button>
+                        <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 py-3 border border-gray-200 dark:border-gray-700 rounded-xl font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-50">Cancel</button>
                         <button type="submit" className="flex-[2] py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700">Log & Submit</button>
                     </div>
                 </form>

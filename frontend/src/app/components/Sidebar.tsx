@@ -195,34 +195,34 @@ export function Sidebar({ currentPage, setCurrentPage, userRole, collapsed, setC
 
   return (
     <div className={`
-      bg-white border-r border-gray-200 flex flex-col transition-all duration-300
+      bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col transition-all duration-300
       md:relative md:h-screen z-50
       ${mobileOpen ? 'fixed inset-0 w-full' : 'hidden md:flex'}
       ${collapsed ? 'md:w-16' : 'md:w-64'}
     `}>
       {/* Logo */}
-      <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700 dark:border-gray-800 flex items-center justify-between">
         {(!collapsed || mobileOpen) && (
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">
+            <div className="w-8 h-8 bg-blue-600 dark:bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold">
               CE
             </div>
-            <span className="font-semibold text-gray-900">Chosen Energy</span>
+            <span className="font-semibold text-gray-900 dark:text-gray-100">Chosen Energy</span>
           </div>
         )}
 
         {/* Mobile Close Button */}
         <button
           onClick={() => setMobileOpen(false)}
-          className="md:hidden p-1 hover:bg-gray-100 rounded"
+          className="md:hidden p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-gray-500 dark:text-gray-400"
         >
-          <X className="w-6 h-6 text-gray-500" />
+          <X className="w-6 h-6" />
         </button>
 
         {/* Desktop Collapse Button */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="hidden md:block p-1 hover:bg-gray-100 rounded"
+          className="hidden md:block p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-gray-500 dark:text-gray-400"
         >
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>
@@ -234,13 +234,13 @@ export function Sidebar({ currentPage, setCurrentPage, userRole, collapsed, setC
           <div key={groupIndex} className="mb-4">
             {group.section && !collapsed && (
               <div className="px-4 mb-2 flex items-center justify-between">
-                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                <span className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
                   {group.section}
                 </span>
                 {group.expandable && (
                   <button
                     onClick={() => toggleSection(group.sectionId!)}
-                    className="text-gray-400 hover:text-gray-600"
+                    className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                   >
                     <ChevronDown
                       className={`w-3 h-3 transition-transform ${expandedSections.includes(group.sectionId!) ? '' : '-rotate-90'
@@ -263,8 +263,8 @@ export function Sidebar({ currentPage, setCurrentPage, userRole, collapsed, setC
                       key={item.id}
                       onClick={() => setCurrentPage(item.id)}
                       className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors ${isActive
-                        ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-600'
-                        : 'text-gray-700 hover:bg-gray-50'
+                        ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-r-2 border-blue-600 dark:border-blue-500'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:bg-gray-900/50 dark:hover:bg-gray-800'
                         } ${collapsed ? 'justify-center' : ''}`}
                       title={collapsed ? item.label : ''}
                     >
