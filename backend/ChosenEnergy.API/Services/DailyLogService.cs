@@ -41,7 +41,7 @@ public class DailyLogService : IDailyLogService
                 
             var driverInfo = await connection.QueryFirstOrDefaultAsync<dynamic>(driverSql, new { UserId = userId });
             
-            if (driverInfo == null) return null;
+            if (driverInfo == null) return null!;
 
             return await GetDetailedLogByTruckInternalAsync((Guid)driverInfo.truckid, (Guid)driverInfo.driverid, date);
         }

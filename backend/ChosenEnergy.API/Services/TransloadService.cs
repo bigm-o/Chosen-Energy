@@ -41,8 +41,8 @@ public class TransloadService : ITransloadService
 
         if (sourceTruck == null || destTruck == null) throw new Exception("Invalid trucks");
 
-        string sType = sourceTruck.trucktype;
-        string dType = destTruck.trucktype;
+        string sType = sourceTruck!.trucktype;
+        string dType = destTruck!.trucktype;
 
         // Validation: Small to Large is never allowed
         if (sType == "Small" && dType == "Large")
@@ -247,6 +247,6 @@ public class TransloadService : ITransloadService
             JOIN drivers d ON t.receiving_driver_id = d.id
             WHERE t.id = @Id";
         
-        return await connection.QueryFirstOrDefaultAsync<Transload>(sql, new { Id = id });
+        return (await connection.QueryFirstOrDefaultAsync<Transload>(sql, new { Id = id }))!;
     }
 }

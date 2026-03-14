@@ -207,6 +207,6 @@ public class InwardLoadService : IInwardLoadService
             LEFT JOIN depots dep ON i.depot_id = dep.id
             WHERE i.id = @Id";
         
-        return await connection.QueryFirstOrDefaultAsync<InwardLoad>(sql, new { Id = id });
+        return (await connection.QueryFirstOrDefaultAsync<InwardLoad>(sql, new { Id = id }))!;
     }
 }

@@ -31,7 +31,7 @@ public class SettingsService : ISettingsService
     public async Task<SystemSetting> GetSettingAsync(string key)
     {
         using var connection = _connectionFactory.CreateConnection();
-        return await connection.QueryFirstOrDefaultAsync<SystemSetting>("SELECT * FROM system_settings WHERE key = @Key", new { Key = key });
+        return (await connection.QueryFirstOrDefaultAsync<SystemSetting>("SELECT * FROM system_settings WHERE key = @Key", new { Key = key }))!;
     }
 
     public async Task<bool> UpdateValueAsync(string key, string value, Guid userId)
