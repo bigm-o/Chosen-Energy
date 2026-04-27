@@ -361,7 +361,7 @@ export function ExpensesPage() {
                                     value={formData.categoryId}
                                     onChange={(e) => setFormData({...formData, categoryId: e.target.value})}
                                     required
-                                    disabled={selectedExpense && selectedExpense.source !== 'Manual'}
+                                    disabled={!!selectedExpense && selectedExpense.source !== 'Manual'}
                                 >
                                     <option value="">{selectedExpense?.source !== 'Manual' ? selectedExpense?.category : 'Select Category'}</option>
                                     {categories.map(cat => (
@@ -382,7 +382,7 @@ export function ExpensesPage() {
                                     value={formData.amount}
                                     onChange={(e) => setFormData({...formData, amount: e.target.value})}
                                     required
-                                    disabled={selectedExpense && selectedExpense.source !== 'Manual'}
+                                    disabled={!!selectedExpense && selectedExpense.source !== 'Manual'}
                                 />
                             </div>
                         </div>
@@ -397,7 +397,7 @@ export function ExpensesPage() {
                                     value={formData.expenseDate}
                                     onChange={(e) => setFormData({...formData, expenseDate: e.target.value})}
                                     required
-                                    disabled={selectedExpense && selectedExpense.source !== 'Manual'}
+                                    disabled={!!selectedExpense && selectedExpense.source !== 'Manual'}
                                 />
                             </div>
                         </div>

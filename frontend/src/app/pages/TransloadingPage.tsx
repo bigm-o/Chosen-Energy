@@ -19,6 +19,7 @@ interface Transload {
     createdByName: string;
     receivingDriverName: string;
     sourceDriverName: string;
+    transloadType: string;
     slipUrl?: string;
 }
 
@@ -75,7 +76,7 @@ export function TransloadingPage() {
             
             const transData = await transResponse.json();
             const truckData = await trucksResponse.json();
-            let meData = { data: null };
+            let meData: any = { data: null };
             
             if (meResponse && meResponse.ok) {
                 meData = await meResponse.json();
@@ -86,7 +87,7 @@ export function TransloadingPage() {
             setMyDriver(meData.data);
             
             // If it's a driver, auto-set their source truck
-            if (meData.data?.assignedTruckId) {
+            if (meData?.data?.assignedTruckId) {
                 setFormData(prev => ({ ...prev, sourceTruckId: meData.data.assignedTruckId }));
             }
         } catch (err) {
