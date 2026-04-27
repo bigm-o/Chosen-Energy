@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Plus, Users, Eye, Phone, Mail, User, Search, AlertCircle, Edit, Trash2, CheckCircle, TrendingUp } from 'lucide-react';
+import { Plus, Users, Eye, Phone, Mail, User, Search, AlertCircle, Edit, Trash2, CheckCircle, TrendingUp, Loader2 } from 'lucide-react';
 import { apiRequest } from '@/utils/api';
 import { Modal } from '@/app/components/Modal';
 
@@ -19,6 +19,7 @@ export function CustomersPage() {
     const { token } = useAuth();
     const [customers, setCustomers] = useState<CustomerItem[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [showAddModal, setShowAddModal] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
@@ -62,7 +63,7 @@ export function CustomersPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
+        setIsSubmitting(true);
         setError(null);
         try {
             const url = editingCustomer
@@ -88,7 +89,7 @@ export function CustomersPage() {
         } catch (err) {
             setError('Error saving customer');
         } finally {
-            setLoading(false);
+            setIsSubmitting(false);
         }
     };
 
@@ -111,7 +112,7 @@ export function CustomersPage() {
 
     const confirmDelete = async () => {
         if (!customerToDelete) return;
-        setLoading(true);
+        setIsSubmitting(true);
         try {
             const response = await apiRequest(`/api/customers/${customerToDelete.id}`, { method: 'DELETE' });
             if (response.ok) {
@@ -126,7 +127,7 @@ export function CustomersPage() {
         } catch (err) {
             setError('Error deleting customer');
         } finally {
-            setLoading(false);
+            setIsSubmitting(false);
         }
     };
 
@@ -163,8 +164,9 @@ export function CustomersPage() {
 
     if (loading && customers.length === 0) {
         return (
-            <div className="flex items-center justify-center h-64">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <div className="flex flex-col items-center justify-center h-64 gap-3 text-gray-400">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                <p className="text-[10px] font-black uppercase tracking-widest">Loading Customers...</p>
             </div>
         );
     }
@@ -300,9 +302,14 @@ export function CustomersPage() {
 
                             <button
                                 onClick={() => handleViewProfile(customer)}
-                                className="w-full flex items-center justify-center gap-2 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium text-gray-900 dark:text-gray-100"
+                                disabled={loadingHistory && viewingCustomer?.id === customer.id}
+                                className="w-full flex items-center justify-center gap-2 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium text-gray-900 dark:text-gray-100 disabled:opacity-50"
                             >
-                                <Eye className="w-4 h-4" />
+                                {loadingHistory && viewingCustomer?.id === customer.id ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                    <Eye className="w-4 h-4" />
+                                )}
                                 View History
                             </button>
                         </div>
@@ -373,9 +380,14 @@ export function CustomersPage() {
                         </div>
                     </div>
                     <div className="flex justify-end gap-3 pt-4">
-                        <button type="button" onClick={() => setShowAddModal(false)} className="px-4 py-2 border rounded-lg">Cancel</button>
-                        <button type="submit" disabled={loading} className="px-4 py-2 bg-gray-900 text-white rounded-lg">
-                            {loading ? 'Saving...' : 'Save'}
+                        <button type="button" onClick={() => setShowAddModal(false)} className="px-4 py-2 border dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300">Cancel</button>
+                        <button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="px-6 py-2 bg-gray-900 text-white rounded-lg flex items-center gap-2 disabled:opacity-50"
+                        >
+                            {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                            {isSubmitting ? 'Saving...' : 'Save'}
                         </button>
                     </div>
                 </form>
@@ -435,8 +447,15 @@ export function CustomersPage() {
                 <div className="space-y-4">
                     <p>Are you sure you want to delete <span className="font-bold">{customerToDelete?.companyName}</span>?</p>
                     <div className="flex justify-end gap-3 pt-4">
-                        <button onClick={() => setShowDeleteModal(false)} className="px-4 py-2 border rounded-lg">Cancel</button>
-                        <button onClick={confirmDelete} className="px-4 py-2 bg-red-600 text-white rounded-lg">Delete</button>
+                        <button onClick={() => setShowDeleteModal(false)} className="px-4 py-2 border dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300">Cancel</button>
+                        <button
+                            onClick={confirmDelete}
+                            disabled={isSubmitting}
+                            className="px-6 py-2 bg-red-600 text-white rounded-lg flex items-center gap-2 disabled:opacity-50"
+                        >
+                            {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                            {isSubmitting ? 'Deleting...' : 'Delete'}
+                        </button>
                     </div>
                 </div>
             </Modal>

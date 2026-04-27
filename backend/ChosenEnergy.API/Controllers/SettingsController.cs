@@ -39,7 +39,7 @@ public class SettingsController : ControllerBase
         if (string.IsNullOrEmpty(userIdStr)) return Unauthorized();
 
         var result = await _settingsService.UpdateValueAsync(key, request.Value, Guid.Parse(userIdStr));
-        return Ok(new { success = result, message = result ? "Update pending approval" : "Update failed" });
+        return Ok(new { success = result, message = result ? "Global settings updated successfully" : "Update failed" });
     }
 
     [HttpPost("{key}/approve")]
@@ -54,6 +54,58 @@ public class SettingsController : ControllerBase
         var result = await _settingsService.ApproveUpdateAsync(key, Guid.Parse(userIdStr));
         return Ok(new { success = result, message = result ? "Setting approved" : "Approval failed" });
     }
+
+    // Customer Specific Prices
+    [HttpGet("customer-prices")]
+    public async Task<IActionResult> GetAllCustomerPrices()
+    {
+        var prices = await _settingsService.GetAllCustomerPricesAsync();
+        return Ok(new { success = true, data = prices });
+    }
+
+    [HttpGet("customer-prices/{customerId}")]
+    public async Task<IActionResult> GetEffectivePrice(Guid customerId)
+    {
+        var specificPrice = await _settingsService.GetCustomerPriceAsync(customerId);
+        if (specificPrice.HasValue)
+        {
+            return Ok(new { success = true, data = specificPrice.Value, isSpecific = true });
+        }
+
+        var globalPriceStr = await _settingsService.GetValueAsync("DieselSellingPrice");
+        decimal.TryParse(globalPriceStr, out decimal globalPrice);
+        
+        return Ok(new { success = true, data = globalPrice, isSpecific = false });
+    }
+
+    [HttpPost("customer-prices")]
+    public async Task<IActionResult> SetCustomerPrice([FromBody] SetCustomerPriceRequest request)
+    {
+        var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdStr)) return Unauthorized();
+
+        try
+        {
+            var result = await _settingsService.SetCustomerPriceAsync(request.CustomerId, request.Price, Guid.Parse(userIdStr));
+            return Ok(new { success = result, message = result ? "Customer price updated" : "Update failed: No rows affected" });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { success = false, message = $"Update failed: {ex.Message}" });
+        }
+    }
+
+    [HttpDelete("customer-prices/{customerId}")]
+    public async Task<IActionResult> RemoveCustomerPrice(Guid customerId)
+    {
+        var result = await _settingsService.RemoveCustomerPriceAsync(customerId);
+        return Ok(new { success = result, message = result ? "Customer price removed" : "Deletion failed" });
+    }
 }
 
 public class UpdateSettingRequest { public string Value { get; set; } = string.Empty; }
+public class SetCustomerPriceRequest 
+{ 
+    public Guid CustomerId { get; set; } 
+    public decimal Price { get; set; } 
+}

@@ -68,7 +68,30 @@ public class CustomersController : ControllerBase
         return Ok(new { success = true, data = customer });
     }
 
-    // ... (GetHistory remains same)
+    [HttpGet("{id}/history")]
+    public async Task<IActionResult> GetHistory(Guid id)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        var sql = @"
+            SELECT 
+                s.id as Id,
+                s.sale_id as SaleId,
+                s.quantity as Quantity,
+                s.price_per_litre as PricePerLitre,
+                s.total_amount as TotalAmount,
+                s.status::text as Status,
+                s.supply_date as SupplyDate,
+                t.registration_number as TruckRegNumber,
+                dr.full_name as DriverName
+            FROM supplies s
+            LEFT JOIN trucks t ON s.truck_id = t.id
+            LEFT JOIN drivers dr ON s.driver_id = dr.id
+            WHERE s.customer_id = @Id
+            ORDER BY s.supply_date DESC";
+            
+        var history = await connection.QueryAsync<CustomerHistoryDto>(sql, new { Id = id });
+        return Ok(new { success = true, data = history });
+    }
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateCustomerRequest request)

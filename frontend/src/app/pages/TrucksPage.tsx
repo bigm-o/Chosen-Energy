@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Plus, Filter, Truck as TruckIcon, Eye, AlertTriangle, Edit, Trash2, X, CheckCircle2, AlertCircle, ChevronDown, User, Search } from 'lucide-react';
+import { Plus, Filter, Truck as TruckIcon, Eye, AlertTriangle, Edit, Trash2, X, CheckCircle2, AlertCircle, ChevronDown, User, Search, Loader2 } from 'lucide-react';
 import { apiRequest } from '@/utils/api';
 import { Modal } from '@/app/components/Modal';
 import { toast } from 'sonner';
@@ -31,6 +31,7 @@ export function TrucksPage() {
     const [trucks, setTrucks] = useState<TruckItem[]>([]);
     const [drivers, setDrivers] = useState<Driver[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [showFormModal, setShowFormModal] = useState(false);
     const [viewingTruck, setViewingTruck] = useState<TruckItem | null>(null);
     const [editingTruck, setEditingTruck] = useState<TruckItem | null>(null);
@@ -94,8 +95,7 @@ export function TrucksPage() {
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Are you sure you want to delete this truck?')) return;
-
+        setIsSubmitting(true);
         try {
             const response = await apiRequest(`/api/trucks/${id}`, {
                 method: 'DELETE'
@@ -111,12 +111,14 @@ export function TrucksPage() {
             }
         } catch (err) {
             toast.error('An error occurred');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
+        setIsSubmitting(true);
         try {
             const url = editingTruck
                 ? `/api/trucks/${editingTruck.id}`
@@ -150,7 +152,7 @@ export function TrucksPage() {
         } catch (err) {
             toast.error('An error occurred');
         } finally {
-            setLoading(false);
+            setIsSubmitting(false);
         }
     };
 
@@ -181,8 +183,9 @@ export function TrucksPage() {
 
     if (loading && trucks.length === 0) {
         return (
-            <div className="flex items-center justify-center h-64">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <div className="flex flex-col items-center justify-center py-24 gap-4 text-gray-400">
+                <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
+                <p className="text-sm font-bold uppercase tracking-[0.2em]">Inspecting Fleet Condition...</p>
             </div>
         );
     }
@@ -444,9 +447,11 @@ export function TrucksPage() {
                                 </button>
                                 <button
                                     onClick={() => handleDelete(viewingTruck.id)}
-                                    className="flex-1 flex items-center justify-center gap-2 py-2.5 border border-red-200 bg-red-50 dark:bg-red-900/30 text-red-700 rounded-xl font-medium hover:bg-red-100 transition-colors"
+                                    disabled={isSubmitting}
+                                    className="flex-1 flex items-center justify-center gap-2 py-2.5 border border-red-200 bg-red-50 dark:bg-red-900/30 text-red-700 rounded-xl font-medium hover:bg-red-100 transition-colors disabled:opacity-50"
                                 >
-                                    <Trash2 className="w-4 h-4" /> Delete Truck
+                                    {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                                    {isSubmitting ? 'Deleting...' : 'Delete Truck'}
                                 </button>
                             </div>
 
@@ -613,10 +618,11 @@ export function TrucksPage() {
                         </button>
                         <button
                             type="submit"
-                            disabled={loading}
-                            className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
+                            disabled={isSubmitting}
+                            className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center gap-2"
                         >
-                            {loading ? 'Saving...' : (editingTruck ? 'Update Truck' : 'Add Truck')}
+                            {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                            {isSubmitting ? 'Saving...' : (editingTruck ? 'Update Truck' : 'Add Truck')}
                         </button>
                     </div>
                 </form>

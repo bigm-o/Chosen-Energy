@@ -11,5 +11,8 @@ public interface IUserRepository
     Task<User> CreateAsync(User user, string passwordHash);
     Task<User> UpdateAsync(User user);
     Task<bool> UpdateThemeAsync(Guid id, string themePreference);
+    Task<bool> UpdatePermissionsAsync(Guid id, string permissionsJson);
+    Task<bool> UpdatePasswordAsync(Guid id, string passwordHash, bool requiresPasswordChange);
+    Task<bool> UpdateLastLoginAsync(Guid id);
     Task<bool> DeleteAsync(Guid id);
 }

@@ -32,7 +32,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ currentPage, setCurrentPage, userRole, collapsed, setCollapsed, mobileOpen, setMobileOpen }: SidebarProps) {
-  const [expandedSections, setExpandedSections] = useState<string[]>(['operations', 'fleet']);
+  const [expandedSections, setExpandedSections] = useState<string[]>(['operations', 'fleet', 'finance']);
 
   const toggleSection = (section: string) => {
     setExpandedSections(prev =>
@@ -130,6 +130,12 @@ export function Sidebar({ currentPage, setCurrentPage, userRole, collapsed, setC
           icon: Wrench,
           roles: ['MD', 'Admin', 'GarageManager'],
         },
+        {
+          id: 'diesel-usage',
+          label: 'Diesel Usage',
+          icon: Fuel,
+          roles: ['MD', 'Admin', 'GarageManager'],
+        },
       ],
     },
     {
@@ -178,10 +184,10 @@ export function Sidebar({ currentPage, setCurrentPage, userRole, collapsed, setC
           roles: ['MD', 'Admin', 'GarageManager'],
         },
         {
-          id: 'system',
+          id: 'user-management',
           label: 'User Management',
           icon: Settings,
-          roles: ['Admin'],
+          roles: ['Admin', 'MD'],
         },
         {
           id: 'global-settings',

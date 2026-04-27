@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { PageHeader } from '@/app/components/PageHeader';
-import { MessageSquare, Calendar, Bell, Users, Search, Info } from 'lucide-react';
+import { MessageSquare, Calendar, Bell, Users, Search, Info, Loader2 } from 'lucide-react';
 import { Modal } from '@/app/components/Modal';
 
 interface Message {
@@ -15,6 +15,7 @@ interface Message {
 export function CommunicationCenterPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [showNewMessageModal, setShowNewMessageModal] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const [messages, setMessages] = useState<Message[]>([
         { id: '1', sender: 'Ahmed Ibrahim', senderRole: 'Driver', content: 'Delayed at Depot due to long queue.', time: '10:30 AM', read: false },
@@ -146,7 +147,20 @@ export function CommunicationCenterPage() {
                     </div>
                     <div className="flex gap-3 pt-4">
                         <button onClick={() => setShowNewMessageModal(false)} className="flex-1 py-3 border border-gray-200 dark:border-gray-700 rounded-xl font-bold text-gray-500 dark:text-gray-400">Cancel</button>
-                        <button className="flex-[2] py-3 bg-blue-600 text-white rounded-xl font-bold">Send Broadcast</button>
+                        <button 
+                            disabled={isSubmitting}
+                            onClick={() => {
+                                setIsSubmitting(true);
+                                setTimeout(() => {
+                                    setIsSubmitting(false);
+                                    setShowNewMessageModal(false);
+                                }, 1500);
+                            }}
+                            className="flex-[2] py-3 bg-blue-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                            {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                            {isSubmitting ? 'Sending...' : 'Send Broadcast'}
+                        </button>
                     </div>
                 </div>
             </Modal>

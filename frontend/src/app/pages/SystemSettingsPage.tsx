@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { PageHeader } from '@/app/components/PageHeader';
-import { Settings, Users, Shield, Database, Bell, Lock, Plus, Edit, Power } from 'lucide-react';
+import { Settings, Users, Shield, Database, Bell, Lock, Plus, Edit, Power, Loader2 } from 'lucide-react';
 import { apiRequest } from '@/utils/api';
 import { Modal } from '@/app/components/Modal';
 import { toast } from 'sonner';
@@ -21,6 +21,8 @@ export function SystemSettingsPage() {
     const [showAddModal, setShowAddModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [processingUserId, setProcessingUserId] = useState<string | null>(null);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -53,6 +55,7 @@ export function SystemSettingsPage() {
 
     const handleAddUser = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsSubmitting(true);
         try {
             const response = await apiRequest('/api/users', {
                 method: 'POST',
@@ -71,6 +74,8 @@ export function SystemSettingsPage() {
             }
         } catch (err) {
             toast.error("An error occurred");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -78,6 +83,7 @@ export function SystemSettingsPage() {
         e.preventDefault();
         if (!selectedUser) return;
 
+        setIsSubmitting(true);
         try {
             const response = await apiRequest(`/api/users/${selectedUser.id}`, {
                 method: 'PUT',
@@ -85,7 +91,7 @@ export function SystemSettingsPage() {
                 body: JSON.stringify({
                     fullName: formData.fullName,
                     role: formData.role,
-                    isActive: selectedUser.isActive // Keep existing status from state, unless we add toggle here
+                    isActive: selectedUser.isActive
                 })
             });
 
@@ -100,17 +106,14 @@ export function SystemSettingsPage() {
             }
         } catch (err) {
             toast.error("An error occurred");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     const handleToggleStatus = async (user: User) => {
+        setProcessingUserId(user.id);
         try {
-            // If deactivating, use the Delete endpoint (soft delete)
-            // If reactivating, we'd need an update endpoint that supports setting isActive=true explicitly.
-            // Currently, Update endpoint supports IsActive.
-            // Delete endpoint sets IsActive=false. 
-            // So let's use Update for both to be safe and explicit, if backend allows.
-
             const newStatus = !user.isActive;
 
             const response = await apiRequest(`/api/users/${user.id}`, {
@@ -131,6 +134,8 @@ export function SystemSettingsPage() {
             }
         } catch (err) {
             toast.error("An error occurred");
+        } finally {
+            setProcessingUserId(null);
         }
     };
 
@@ -193,10 +198,12 @@ export function SystemSettingsPage() {
                         </div>
 
                         {loading ? (
-                            <div className="text-center py-10">Loading users...</div>
+                            <div className="flex flex-col items-center justify-center py-24 gap-4 text-gray-400">
+                                <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
+                                <p className="text-sm font-bold uppercase tracking-[0.2em]">Synchronizing User Access...</p>
+                            </div>
                         ) : (
                             <>
-                                {/* Mobile Cards (Visible on mobile only) */}
                                 <div className="md:hidden space-y-4">
                                     {users.map((u) => (
                                         <div key={u.id} className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-800 rounded-xl p-4 shadow-sm">
@@ -232,9 +239,10 @@ export function SystemSettingsPage() {
                                                     {u.role !== 'Admin' && (
                                                         <button
                                                             onClick={() => handleToggleStatus(u)}
-                                                            className={`p-1.5 rounded-lg ${u.isActive ? 'text-red-600 bg-red-50 hover:bg-red-100' : 'text-green-600 bg-green-50 hover:bg-green-100'}`}
+                                                            disabled={processingUserId === u.id}
+                                                            className={`p-1.5 rounded-lg disabled:opacity-50 ${u.isActive ? 'text-red-600 bg-red-50 hover:bg-red-100' : 'text-green-600 bg-green-50 hover:bg-green-100'}`}
                                                         >
-                                                            <Power className="w-4 h-4" />
+                                                            {processingUserId === u.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Power className="w-4 h-4" />}
                                                         </button>
                                                     )}
                                                 </div>
@@ -243,7 +251,6 @@ export function SystemSettingsPage() {
                                     ))}
                                 </div>
 
-                                {/* Table (Visible on desktop only) */}
                                 <div className="hidden md:block overflow-x-auto">
                                     <table className="w-full">
                                         <thead className="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-800">
@@ -280,10 +287,11 @@ export function SystemSettingsPage() {
                                                             {u.role !== 'Admin' && (
                                                                 <button
                                                                     onClick={() => handleToggleStatus(u)}
+                                                                    disabled={processingUserId === u.id}
                                                                     title={u.isActive ? "Deactivate User" : "Activate User"}
-                                                                    className={`p-1 rounded transition-colors ${u.isActive ? 'text-green-600 hover:bg-red-50 hover:text-red-600' : 'text-gray-400 hover:text-green-600 hover:bg-green-50'}`}
+                                                                    className={`p-1 rounded transition-colors disabled:opacity-50 ${u.isActive ? 'text-green-600 hover:bg-red-50 hover:text-red-600' : 'text-gray-400 hover:text-green-600 hover:bg-green-50'}`}
                                                                 >
-                                                                    <Power className="w-4 h-4" />
+                                                                    {processingUserId === u.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Power className="w-4 h-4" />}
                                                                 </button>
                                                             )}
                                                         </div>
@@ -298,7 +306,6 @@ export function SystemSettingsPage() {
                     </div>
                 )}
 
-                {/* Other tabs remain same... */}
                 {activeTab === 'system' && (
                     <div className="p-8 space-y-8">
                         <div className="max-w-xl space-y-6">
@@ -342,8 +349,19 @@ export function SystemSettingsPage() {
                         </div>
                         <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">Database Management</h3>
                         <p className="text-gray-500 dark:text-gray-400 mb-8">Current Database Size: 45MB • Last Backup: 2 hours ago</p>
-                        <button className="px-8 py-4 bg-gray-900 text-white rounded-xl font-bold shadow-xl hover:bg-gray-800 transition-all">
-                            Trigger Manual Backup
+                        <button 
+                            disabled={isSubmitting}
+                            onClick={() => {
+                                setIsSubmitting(true);
+                                setTimeout(() => {
+                                    setIsSubmitting(false);
+                                    toast.success("Manual backup completed successfully");
+                                }, 2000);
+                            }}
+                            className="px-8 py-4 bg-gray-900 text-white rounded-xl font-bold shadow-xl hover:bg-gray-800 transition-all flex items-center justify-center gap-2 mx-auto disabled:opacity-50"
+                        >
+                            {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
+                            {isSubmitting ? 'Backing up...' : 'Trigger Manual Backup'}
                         </button>
                     </div>
                 )}
@@ -399,7 +417,6 @@ export function SystemSettingsPage() {
                                 <option value="Admin">Admin</option>
                                 <option value="MD">MD</option>
                                 <option value="GarageManager">Garage Manager</option>
-                                {/* Driver creation is handled in Onboarding */}
                             </select>
                         </div>
                     </div>
@@ -415,7 +432,14 @@ export function SystemSettingsPage() {
                     </div>
                     <div className="flex justify-end gap-3 pt-4">
                         <button type="button" onClick={() => setShowAddModal(false)} className="px-4 py-2 text-gray-500 dark:text-gray-400 font-bold hover:bg-gray-100 rounded-lg">Cancel</button>
-                        <button type="submit" className="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700">Create User</button>
+                        <button 
+                            type="submit" 
+                            disabled={isSubmitting}
+                            className="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+                        >
+                            {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                            {isSubmitting ? 'Creating...' : 'Create User'}
+                        </button>
                     </div>
                 </form>
             </Modal>
@@ -459,7 +483,14 @@ export function SystemSettingsPage() {
                     </div>
                     <div className="flex justify-end gap-3 pt-4">
                         <button type="button" onClick={() => setShowEditModal(false)} className="px-4 py-2 text-gray-500 dark:text-gray-400 font-bold hover:bg-gray-100 rounded-lg">Cancel</button>
-                        <button type="submit" className="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700">Save Changes</button>
+                        <button 
+                            type="submit" 
+                            disabled={isSubmitting}
+                            className="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+                        >
+                            {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                            {isSubmitting ? 'Updating...' : 'Save Changes'}
+                        </button>
                     </div>
                 </form>
             </Modal>

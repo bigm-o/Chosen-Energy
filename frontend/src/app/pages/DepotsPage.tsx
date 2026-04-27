@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Plus, Edit, Trash2, MapPin, Fuel, Phone, Search, Filter, X, Calendar, TrendingUp } from 'lucide-react';
+import { Plus, Edit, Trash2, MapPin, Fuel, Phone, Search, Filter, X, Calendar, TrendingUp, Loader2, AlertCircle } from 'lucide-react';
 import { apiRequest } from '@/utils/api';
 import { Modal } from '@/app/components/Modal';
 
@@ -10,8 +10,7 @@ interface Depot {
     location: string;
     contactInfo: string;
     current_stock?: number;
-    purchasePrice?: number;
-    totalPurchased?: number; // Total litres purchased
+    totalPurchased?: number;
     createdAt: string;
 }
 
@@ -29,6 +28,7 @@ export function DepotsPage() {
     const { token } = useAuth();
     const [depots, setDepots] = useState<Depot[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [showAddModal, setShowAddModal] = useState(false);
     const [showInventoryModal, setShowInventoryModal] = useState(false);
     const [editingDepot, setEditingDepot] = useState<Depot | null>(null);
@@ -44,8 +44,7 @@ export function DepotsPage() {
     const [formData, setFormData] = useState({
         name: '',
         location: '',
-        contactInfo: '',
-        purchasePrice: ''
+        contactInfo: ''
     });
 
     useEffect(() => {
@@ -100,7 +99,7 @@ export function DepotsPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
+        setIsSubmitting(true);
         setError(null);
 
         try {
@@ -118,7 +117,7 @@ export function DepotsPage() {
                 setSuccess(editingDepot ? 'Depot updated successfully' : 'Depot created successfully');
                 setShowAddModal(false);
                 setEditingDepot(null);
-                setFormData({ name: '', location: '', contactInfo: '', purchasePrice: '' });
+                setFormData({ name: '', location: '', contactInfo: '' });
                 fetchDepots();
             } else {
                 const err = await response.json();
@@ -127,7 +126,7 @@ export function DepotsPage() {
         } catch (err) {
             setError('Error saving depot');
         } finally {
-            setLoading(false);
+            setIsSubmitting(false);
         }
     };
 
@@ -136,8 +135,7 @@ export function DepotsPage() {
         setFormData({
             name: depot.name,
             location: depot.location,
-            contactInfo: depot.contactInfo,
-            purchasePrice: (depot.purchasePrice || 0).toString()
+            contactInfo: depot.contactInfo
         });
         setShowAddModal(true);
     };
@@ -150,7 +148,7 @@ export function DepotsPage() {
     const confirmDelete = async () => {
         if (!depotToDelete) return;
 
-        setLoading(true);
+        setIsSubmitting(true);
         try {
             const response = await apiRequest(`/api/depots/${depotToDelete.id}`, { method: 'DELETE' });
             if (response.ok) {
@@ -165,7 +163,7 @@ export function DepotsPage() {
         } catch (err) {
             setError('Error deleting depot');
         } finally {
-            setLoading(false);
+            setIsSubmitting(false);
         }
     };
 
@@ -183,7 +181,33 @@ export function DepotsPage() {
     // Find the max total purchased for progress bar scaling
     const maxPurchased = Math.max(...depots.map(d => d.totalPurchased || 0), 1);
 
-    if (loading && depots.length === 0) return <div className="p-6 text-center">Loading depots...</div>;
+    const renderContactInfo = (info: string) => {
+        if (!info) return 'No contact details provided';
+        try {
+            if (info.trim().startsWith('{')) {
+                const parsed = JSON.parse(info);
+                return (
+                    <div className="space-y-0.5">
+                        {parsed.phone && <p className="text-gray-700 dark:text-gray-300">{parsed.phone}</p>}
+                        {parsed.email && <p className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">{parsed.email}</p>}
+                        {!parsed.phone && !parsed.email && <p>{info}</p>}
+                    </div>
+                );
+            }
+            return info;
+        } catch {
+            return info;
+        }
+    };
+
+    if (loading && depots.length === 0) {
+        return (
+            <div className="flex flex-col items-center justify-center py-24 gap-4 text-gray-400">
+                <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
+                <p className="text-sm font-bold uppercase tracking-[0.2em]">Synchronizing Depot Inventory...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
@@ -196,7 +220,7 @@ export function DepotsPage() {
                 <button
                     onClick={() => {
                         setEditingDepot(null);
-                        setFormData({ name: '', location: '', contactInfo: '', purchasePrice: '' });
+                        setFormData({ name: '', location: '', contactInfo: '' });
                         setShowAddModal(true);
                     }}
                     className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors shadow-sm"
@@ -278,23 +302,28 @@ export function DepotsPage() {
 
                             <div className="space-y-4">
                                 {/* Total Purchased Section */}
-                                <div className="bg-slate-900/40 dark:bg-gray-950/60 rounded-lg p-3 border border-slate-800/50 dark:border-gray-800/50 shadow-inner">
-                                    <div className="flex items-center justify-between mb-2">
+                                <div className="bg-blue-50/50 dark:bg-gray-950/60 rounded-xl p-4 border border-blue-100/50 dark:border-gray-800/50 shadow-inner">
+                                    <div className="flex items-center justify-between mb-2.5">
                                         <div className="flex items-center gap-2">
-                                            <TrendingUp className="w-4 h-4 text-blue-400 dark:text-blue-400" />
-                                            <span className="text-xs font-semibold text-blue-400 dark:text-blue-400 uppercase tracking-wider">Total Purchased</span>
+                                            <TrendingUp className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                            <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-[0.15em]">Total Purchased</span>
                                         </div>
-                                        <span className="text-sm font-bold text-white dark:text-white">{totalPurchased.toLocaleString()} L</span>
+                                        <span className="text-base font-black text-blue-900 dark:text-white">{totalPurchased.toLocaleString()} <span className="text-[10px] opacity-60">L</span></span>
                                     </div>
-                                    <div className="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-1.5 overflow-hidden">
+                                    <div className="w-full bg-blue-200/50 dark:bg-blue-900/30 rounded-full h-2 overflow-hidden">
                                         <div
-                                            className="h-full bg-blue-600 dark:bg-blue-500 rounded-full transition-all duration-500"
+                                            className="h-full bg-blue-600 dark:bg-blue-500 rounded-full shadow-[0_0_10px_rgba(37,99,235,0.3)] transition-all duration-700 ease-out"
                                             style={{ width: `${purchasePercentage}%` }}
                                         />
                                     </div>
-                                    <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
-                                        {purchasePercentage.toFixed(1)}% of highest depot
-                                    </p>
+                                    <div className="flex justify-between items-center mt-2.5">
+                                        <p className="text-[10px] font-bold text-blue-700/70 dark:text-blue-300/70 uppercase">
+                                            Performance Rank
+                                        </p>
+                                        <p className="text-[10px] font-black text-blue-700 dark:text-blue-300 uppercase">
+                                            {purchasePercentage.toFixed(1)}% of Highest
+                                        </p>
+                                    </div>
                                 </div>
 
                                 {/* Contact Section */}
@@ -304,24 +333,23 @@ export function DepotsPage() {
                                     </div>
                                     <div className="flex-1">
                                         <span className="text-xs text-gray-400 dark:text-gray-500 font-medium uppercase">Contact Details</span>
-                                        <p className="text-sm text-gray-700 dark:text-gray-300 mt-0.5 whitespace-pre-line">
-                                            {depot.contactInfo || 'No contact details provided'}
-                                        </p>
+                                        <div className="text-sm mt-0.5">
+                                            {renderContactInfo(depot.contactInfo)}
+                                        </div>
                                     </div>
-                                </div>
-
-                                {/* Purchase Price Section */}
-                                <div className="flex items-center justify-between pt-2 border-t border-gray-50">
-                                    <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Base Purchase Price</span>
-                                    <span className="text-sm font-black text-gray-900 dark:text-gray-100">₦{(depot.purchasePrice || 0).toLocaleString()} <span className="text-[10px] text-gray-400 dark:text-gray-500">/L</span></span>
                                 </div>
                             </div>
 
                             <button
                                 onClick={() => handleViewInventory(depot)}
-                                className="w-full mt-6 py-2 px-4 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 group/btn"
+                                disabled={loadingPurchases && selectedDepot?.id === depot.id}
+                                className="w-full mt-6 py-2 px-4 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors flex items-center justify-center gap-2 group/btn disabled:opacity-50"
                             >
-                                <span>View Full Inventory</span>
+                                {loadingPurchases && selectedDepot?.id === depot.id ? (
+                                    <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                                ) : (
+                                    <span>View Full Inventory</span>
+                                )}
                                 <span className="group-hover/btn:translate-x-0.5 transition-transform">→</span>
                             </button>
                         </div>
@@ -372,21 +400,6 @@ export function DepotsPage() {
                         />
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Purchase Price (per Litre)</label>
-                        <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 font-bold">₦</span>
-                             <input
-                                type="number"
-                                step="0.01"
-                                value={formData.purchasePrice}
-                                onChange={e => setFormData({ ...formData, purchasePrice: e.target.value })}
-                                className="w-full pl-8 pr-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent outline-none transition-all font-bold text-gray-900 dark:text-gray-100"
-                                placeholder="0.00"
-                                required
-                            />
-                        </div>
-                    </div>
 
                     <div className="flex justify-end gap-3 pt-4">
                         <button
@@ -398,12 +411,12 @@ export function DepotsPage() {
                         </button>
                         <button
                             type="submit"
-                            disabled={loading}
+                            disabled={isSubmitting}
                             className="px-8 py-2.5 bg-gray-900 text-white rounded-lg text-sm font-semibold hover:bg-gray-800 disabled:opacity-50 transition-colors flex items-center gap-2"
                         >
-                            {loading ? (
+                            {isSubmitting ? (
                                 <>
-                                    <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                    <Loader2 className="w-4 h-4 animate-spin" />
                                     <span>Saving...</span>
                                 </>
                             ) : (
@@ -544,12 +557,12 @@ export function DepotsPage() {
                         </button>
                         <button
                             onClick={confirmDelete}
-                            disabled={loading}
+                            disabled={isSubmitting}
                             className="px-8 py-2.5 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 disabled:opacity-50 transition-colors flex items-center gap-2"
                         >
-                            {loading ? (
+                            {isSubmitting ? (
                                 <>
-                                    <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                    <Loader2 className="w-4 h-4 animate-spin" />
                                     <span>Deleting...</span>
                                 </>
                             ) : (
@@ -563,10 +576,3 @@ export function DepotsPage() {
     );
 }
 
-const AlertCircle = ({ className }: { className?: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-        <circle cx="12" cy="12" r="10" />
-        <line x1="12" y1="8" x2="12" y2="12" />
-        <line x1="12" y1="16" x2="12.01" y2="16" />
-    </svg>
-);

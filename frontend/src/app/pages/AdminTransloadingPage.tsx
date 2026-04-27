@@ -20,6 +20,7 @@ interface Transload {
 export function AdminTransloadingPage() {
     const [transloads, setTransloads] = useState<Transload[]>([]);
     const [loading, setLoading] = useState(true);
+    const [processingId, setProcessingId] = useState<string | null>(null);
     const [filter, setFilter] = useState('All');
     const [searchTerm, setSearchTerm] = useState('');
 
@@ -43,6 +44,7 @@ export function AdminTransloadingPage() {
     };
 
     const handleApprove = async (id: string) => {
+        setProcessingId(id);
         try {
             const resp = await apiRequest(`/api/transloads/${id}/approve`, { method: 'POST' });
             if (resp.ok) {
@@ -54,13 +56,16 @@ export function AdminTransloadingPage() {
             }
         } catch (err) {
             toast.error("An error occurred");
+        } finally {
+            setProcessingId(null);
         }
     };
 
     const handleReject = async (id: string) => {
         const reason = prompt("Enter rejection reason:");
         if (reason === null) return;
-
+ 
+        setProcessingId(id);
         try {
             const resp = await apiRequest(`/api/transloads/${id}/reject`, {
                 method: 'POST',
@@ -73,6 +78,8 @@ export function AdminTransloadingPage() {
             }
         } catch (err) {
             toast.error("Rejection failed");
+        } finally {
+            setProcessingId(null);
         }
     };
 
@@ -191,14 +198,22 @@ export function AdminTransloadingPage() {
                                                 {t.status}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4">
+                                         <td className="px-6 py-4">
                                             {t.status === 'Pending' && t.isConfirmedByReceiver && (
                                                 <div className="flex gap-2">
-                                                    <button onClick={() => handleApprove(t.id)} className="p-2 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg hover:bg-green-100 transition-all border border-green-100">
-                                                        <CheckCircle className="w-4 h-4" />
+                                                    <button 
+                                                        onClick={() => handleApprove(t.id)} 
+                                                        disabled={!!processingId}
+                                                        className="p-2 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg hover:bg-green-100 transition-all border border-green-100 disabled:opacity-50"
+                                                    >
+                                                        {processingId === t.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
                                                     </button>
-                                                    <button onClick={() => handleReject(t.id)} className="p-2 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 transition-all border border-red-100">
-                                                        <XCircle className="w-4 h-4" />
+                                                    <button 
+                                                        onClick={() => handleReject(t.id)} 
+                                                        disabled={!!processingId}
+                                                        className="p-2 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 transition-all border border-red-100 disabled:opacity-50"
+                                                    >
+                                                        {processingId === t.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
                                                     </button>
                                                 </div>
                                             )}

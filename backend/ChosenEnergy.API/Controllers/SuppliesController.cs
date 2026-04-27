@@ -86,11 +86,23 @@ public class SuppliesController : ControllerBase
 
             var invoiceUrl = await _fileService.SaveFileAsync(request.Invoice, "invoices");
 
-            // Fetch Fixed Selling Price
-            var priceStr = await _settingsService.GetValueAsync("DieselSellingPrice");
-            if (!decimal.TryParse(priceStr, out decimal fixedPrice))
+            // 1. Check for Customer Specific Price
+            var specificPrice = await _settingsService.GetCustomerPriceAsync(request.CustomerId);
+            decimal appliedPrice;
+
+            if (specificPrice.HasValue)
             {
-                fixedPrice = request.PricePerLitre; // Fallback if setting not found
+                appliedPrice = specificPrice.Value;
+            }
+            else 
+            {
+                // 2. Fallback to Global Fixed Selling Price
+                var globalPriceStr = await _settingsService.GetValueAsync("DieselSellingPrice");
+                if (!decimal.TryParse(globalPriceStr, out appliedPrice))
+                {
+                    // 3. Last fallback to what was sent in request (redundancy)
+                    appliedPrice = request.PricePerLitre;
+                }
             }
 
             var supply = new Supply
@@ -99,8 +111,8 @@ public class SuppliesController : ControllerBase
                 DriverId = request.DriverId,
                 DepotId = request.DepotId,
                 Quantity = request.Quantity,
-                PricePerLitre = fixedPrice,
-                TotalAmount = request.Quantity * fixedPrice,
+                PricePerLitre = appliedPrice,
+                TotalAmount = request.Quantity * appliedPrice,
                 SupplyDate = request.SupplyDate,
                 InvoiceUrl = invoiceUrl
             };

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Plus, Filter, Download, Eye, CheckCircle, XCircle, Edit2, Calendar, AlertCircle, FileText, Clock, ArrowRight } from 'lucide-react';
+import { Plus, Filter, Download, Eye, CheckCircle, XCircle, Edit2, Calendar, AlertCircle, FileText, Clock, ArrowRight, Loader2 } from 'lucide-react';
 import { apiRequest } from '@/utils/api';
 import { Modal } from '@/app/components/Modal';
 
@@ -49,6 +49,7 @@ export function PurchasingPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
   const [actionType, setActionType] = useState<'approve' | 'reject' | 'approve-edit' | 'reject-edit'>('approve');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Filter states
   const [dateFilter, setDateFilter] = useState({
@@ -111,7 +112,8 @@ export function PurchasingPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setIsSubmitting(true);
+    setError(null);
     try {
       const payload = {
         depotId: formData.depotId,
@@ -138,7 +140,7 @@ export function PurchasingPage() {
     } catch (err) {
       setError('Error creating purchase');
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -152,7 +154,8 @@ export function PurchasingPage() {
       return;
     }
 
-    setLoading(true);
+    setIsSubmitting(true);
+    setError(null);
     try {
       const payload = {
         depotId: formData.depotId,
@@ -180,13 +183,14 @@ export function PurchasingPage() {
     } catch (err) {
       setError('Error updating purchase');
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   const handleApproveAction = async () => {
     if (!selectedPurchase) return;
-    setLoading(true);
+    setIsSubmitting(true);
+    setError(null);
     try {
       const endpoint = actionType === 'approve-edit'
         ? `/api/purchases/${selectedPurchase.id}/approve-edit`
@@ -206,7 +210,7 @@ export function PurchasingPage() {
     } catch (err) {
       setError('Error approving');
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -215,7 +219,8 @@ export function PurchasingPage() {
       setError('Please provide a rejection reason');
       return;
     }
-    setLoading(true);
+    setIsSubmitting(true);
+    setError(null);
     try {
       const endpoint = actionType === 'reject-edit'
         ? `/api/purchases/${selectedPurchase.id}/reject-edit`
@@ -240,7 +245,7 @@ export function PurchasingPage() {
     } catch (err) {
       setError('Error rejecting');
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -351,7 +356,14 @@ export function PurchasingPage() {
     }
   };
 
-  if (loading && purchases.length === 0) return <div className="p-6">Loading...</div>;
+  if (loading && purchases.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 gap-4 text-gray-400">
+        <Loader2 className="w-12 h-12 animate-spin" />
+        <p className="text-sm font-bold uppercase tracking-[0.2em]">Synchronizing Purchasing Data...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -370,25 +382,36 @@ export function PurchasingPage() {
         </button>
       </div>
 
-      {/* Alerts */}
-      {error && (
-        <div className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 text-red-700 rounded-lg flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <AlertCircle className="w-5 h-5" />
-            <span>{error}</span>
+      {/* Financial & Operational Stats */}
+      {(() => {
+        const stats = {
+          totalVolume: filteredPurchases.filter(p => p.status === 'Approved').reduce((acc, p) => acc + p.quantity, 0),
+          totalInvestment: filteredPurchases.filter(p => p.status === 'Approved').reduce((acc, p) => acc + p.totalCost, 0),
+          pending: filteredPurchases.filter(p => p.status === 'Pending' || p.hasPendingEdit).length,
+          rejected: filteredPurchases.filter(p => p.status === 'Rejected').length
+        };
+
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-2">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 shadow-sm">
+              <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Total Volume (L)</p>
+              <p className="text-2xl font-black text-gray-900 dark:text-gray-100">{stats.totalVolume.toLocaleString()} L</p>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 shadow-sm">
+              <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Total Investment</p>
+              <p className="text-2xl font-black text-blue-600 dark:text-blue-400">₦{stats.totalInvestment.toLocaleString()}</p>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 shadow-sm">
+              <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Pending Actions</p>
+              <p className="text-2xl font-black text-orange-500">{stats.pending}</p>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 shadow-sm">
+              <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Rejected Entries</p>
+              <p className="text-2xl font-black text-red-600">{stats.rejected}</p>
+            </div>
           </div>
-          <button onClick={() => setError(null)} className="text-red-900 hover:text-red-700 text-xl">×</button>
-        </div>
-      )}
-      {success && (
-        <div className="p-4 bg-green-50 dark:bg-green-900/30 border border-green-200 text-green-700 rounded-lg flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <CheckCircle className="w-5 h-5" />
-            <span>{success}</span>
-          </div>
-          <button onClick={() => setSuccess(null)} className="text-green-900 hover:text-green-700 text-xl">×</button>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Search and Filters */}
       <div className="flex items-center gap-4">
@@ -698,10 +721,17 @@ export function PurchasingPage() {
             </button>
             <button
               type="submit"
-              disabled={loading}
-              className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
+              disabled={isSubmitting}
+              className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center gap-2"
             >
-              {loading ? 'Creating...' : 'Create Purchase'}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Creating...</span>
+                </>
+              ) : (
+                'Create Purchase'
+              )}
             </button>
           </div>
         </form>
@@ -798,10 +828,17 @@ export function PurchasingPage() {
             </button>
             <button
               type="submit"
-              disabled={loading}
-              className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
+              disabled={isSubmitting}
+              className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center gap-2"
             >
-              {loading ? 'Updating...' : 'Update Purchase'}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Updating...</span>
+                </>
+              ) : (
+                'Update Purchase'
+              )}
             </button>
           </div>
         </form>
@@ -1004,10 +1041,17 @@ export function PurchasingPage() {
             </button>
             <button
               onClick={handleApproveAction}
-              disabled={loading}
-              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+              disabled={isSubmitting}
+              className="px-8 py-2.5 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 disabled:opacity-50 transition-colors flex items-center gap-2"
             >
-              {loading ? 'Approving...' : 'Approve'}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>{actionType === 'approve-edit' ? 'Confirming...' : 'Approving...'}</span>
+                </>
+              ) : (
+                <span>{actionType === 'approve-edit' ? 'Confirm Changes' : 'Yes, Approve Purchase'}</span>
+              )}
             </button>
           </div>
         </div>
@@ -1049,10 +1093,17 @@ export function PurchasingPage() {
             </button>
             <button
               onClick={handleRejectAction}
-              disabled={loading || !rejectionReason.trim()}
-              className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+              disabled={isSubmitting || !rejectionReason.trim()}
+              className="px-8 py-2.5 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 disabled:opacity-50 transition-colors flex items-center gap-2"
             >
-              {loading ? 'Rejecting...' : 'Reject'}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Rejecting...</span>
+                </>
+              ) : (
+                <span>{actionType === 'reject-edit' ? 'Discard Edit' : 'Confirm Rejection'}</span>
+              )}
             </button>
           </div>
         </div>

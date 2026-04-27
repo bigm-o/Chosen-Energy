@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { PageHeader } from '@/app/components/PageHeader';
-import { CheckCircle, XCircle, Clock, Eye, Filter, Search } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Eye, Filter, Search, Fuel, ShoppingCart, Info, FileText, Loader2 } from 'lucide-react';
 import { apiRequest, getFileUrl } from '@/utils/api';
 import { Modal } from '@/app/components/Modal';
 
@@ -28,6 +28,7 @@ interface ApprovalItem {
 export function ApprovalsPage() {
     const { user } = useAuth();
     const [loading, setLoading] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [approvals, setApprovals] = useState<ApprovalItem[]>([]);
     const [error, setError] = useState<string | null>(null);
@@ -109,7 +110,8 @@ export function ApprovalsPage() {
 
     const confirmAction = async () => {
         if (!actionToConfirm) return;
-
+ 
+        setIsSubmitting(true);
         const { id, action } = actionToConfirm;
 
         try {
@@ -143,9 +145,7 @@ export function ApprovalsPage() {
         } catch (err) {
             setError(`Error performing action`);
         } finally {
-            // If there's an error, we might want to keep the modal open or close it.
-            // For now, let's close it to avoid blocking the UI, but the error message will be visible.
-            // setShowConfirmModal(false); // Decide if modal should close on error
+            setIsSubmitting(false);
         }
     };
 
@@ -163,187 +163,213 @@ export function ApprovalsPage() {
 
             {/* Alerts */}
             {error && (
-                <div className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 text-red-700 rounded-lg flex justify-between">
-                    <span>{error}</span>
-                    <button onClick={() => setError(null)} className="text-red-900 hover:text-red-700">×</button>
+                <div className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 text-red-700 rounded-xl flex justify-between items-center shadow-sm">
+                    <div className="flex items-center gap-3">
+                        <XCircle className="w-5 h-5 flex-shrink-0" />
+                        <span className="text-sm font-medium">{error}</span>
+                    </div>
+                    <button onClick={() => setError(null)} className="text-red-900 hover:text-red-700 p-1">×</button>
                 </div>
             )}
             {success && (
-                <div className="p-4 bg-green-50 dark:bg-green-900/30 border border-green-200 text-green-700 rounded-lg flex justify-between">
-                    <span>{success}</span>
-                    <button onClick={() => setSuccess(null)} className="text-green-900 hover:text-green-700">×</button>
+                <div className="p-4 bg-green-50 dark:bg-green-900/30 border border-green-200 text-green-700 rounded-xl flex justify-between items-center shadow-sm">
+                    <div className="flex items-center gap-3">
+                        <CheckCircle className="w-5 h-5 flex-shrink-0" />
+                        <span className="text-sm font-medium">{success}</span>
+                    </div>
+                    <button onClick={() => setSuccess(null)} className="text-green-900 hover:text-green-700 p-1">×</button>
                 </div>
             )}
 
-            {/* Stats Summary */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-800 p-5 shadow-sm">
-                    <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Total Pending</p>
-                    <p className="text-2xl font-black text-gray-900 dark:text-gray-100">{approvals.length}</p>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-800 p-5 shadow-sm">
-                    <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Waiting for MD</p>
-                    <p className="text-2xl font-black text-orange-600">{approvals.length}</p>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-800 p-5 shadow-sm">
-                    <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Action Required</p>
-                    <p className="text-2xl font-black text-blue-600 dark:text-blue-400">{approvals.length}</p>
-                </div>
-            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Main Content: Pending Requests List */}
+                <div className="lg:col-span-2 space-y-6">
+                    {/* Filters & Search Header */}
+                    <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm flex flex-col md:flex-row items-center gap-4">
+                        <div className="flex-1 relative w-full">
+                            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+                            <input
+                                type="text"
+                                placeholder="Search by details or type..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 outline-none transition-all text-gray-900 dark:text-white text-sm"
+                            />
+                        </div>
+                        <button className="flex items-center gap-2 px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-700 dark:text-gray-300 transition-all font-bold text-xs uppercase tracking-widest">
+                            <Filter className="w-4 h-4" />
+                            Filter
+                        </button>
+                    </div>
 
-            {/* Filters */}
-            <div className="flex items-center gap-4">
-                <div className="flex-1 relative">
-                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
-                    <input
-                        type="text"
-                        placeholder="Search approvals..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 outline-none transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                    />
-                </div>
-                <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 text-gray-700 dark:text-gray-300">
-                    <Filter className="w-4 h-4" />
-                    <span className="text-sm font-medium">Filter</span>
-                </button>
-            </div>
-
-            {/* Mobile Cards (Visible on mobile only) */}
-            <div className="md:hidden space-y-4">
-                {filteredApprovals.map((item) => (
-                    <div key={item.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-                        <div className="flex justify-between items-start mb-3">
-                            <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${item.type === 'Supply' ? 'bg-blue-100 text-blue-700' :
-                                item.type === 'Purchase' ? 'bg-green-100 text-green-700' :
-                                    item.type === 'Trans-load' ? 'bg-purple-100 text-purple-700' :
-                                        item.type === 'Disbursement' ? 'bg-emerald-100 text-emerald-700' :
-                                            'bg-orange-100 text-orange-700'
-                                }`}>
-                                {item.type}
-                            </span>
-                            <div className="flex items-center gap-1.5">
-                                <Clock className="w-3.5 h-3.5 text-orange-500" />
-                                <span className="text-xs font-semibold text-orange-600">{item.status}</span>
+                    {/* Pending Items */}
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+                        <div className="bg-gray-50/50 dark:bg-gray-900/40 px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Clock className="w-4 h-4 text-orange-500" />
+                                <h3 className="font-black text-gray-900 dark:text-gray-100 tracking-tight text-sm uppercase">Pending Queue</h3>
                             </div>
+                            <span className="text-[10px] font-black bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400 px-2 py-0.5 rounded-full uppercase tracking-widest">
+                                {filteredApprovals.length} Actions Required
+                            </span>
                         </div>
 
-                        <div className="mb-3">
-                            <h3 className="font-bold text-gray-900 dark:text-gray-100 text-sm">{item.details}</h3>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Requested by: {item.requestedBy}</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">{item.date}</p>
+                        <div className="divide-y divide-gray-50 dark:divide-gray-800">
+                            {loading ? (
+                                <div className="py-20 flex flex-col items-center gap-3">
+                                    <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Fetching Approvals...</p>
+                                </div>
+                            ) : filteredApprovals.length === 0 ? (
+                                <div className="py-20 text-center text-gray-400 dark:text-gray-500">
+                                    <CheckCircle className="w-12 h-12 mx-auto mb-4 opacity-10" />
+                                    <p className="text-sm font-medium">All caught up! No pending requests.</p>
+                                </div>
+                            ) : (
+                                filteredApprovals.map((item) => (
+                                    <div key={item.id} className="p-6 hover:bg-gray-50/50 dark:hover:bg-gray-900/30 transition-colors flex items-center justify-between group">
+                                        <div className="flex items-center gap-4">
+                                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm ${
+                                                item.type === 'Supply' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' :
+                                                item.type === 'Purchase' ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' :
+                                                item.type === 'Disbursement' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' :
+                                                'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400'
+                                            }`}>
+                                                {item.type === 'Supply' ? <Fuel className="w-6 h-6" /> : 
+                                                 item.type === 'Purchase' ? <ShoppingCart className="w-6 h-6" /> :
+                                                 <FileText className="w-6 h-6" />}
+                                            </div>
+                                            <div>
+                                                <div className="flex items-center gap-2 mb-0.5">
+                                                    <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500">{item.type}</span>
+                                                    <span className="text-[9px] font-black text-gray-400 px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded uppercase">{item.date}</span>
+                                                </div>
+                                                <h4 className="font-black text-gray-900 dark:text-gray-100 text-sm tracking-tight">{item.details}</h4>
+                                                <div className="flex items-center gap-3 mt-1">
+                                                     <p className="text-xs font-bold text-blue-600 dark:text-blue-400">{item.amount}</p>
+                                                     <p className="text-[10px] text-gray-400 dark:text-gray-500 font-medium">By: {item.requestedBy}</p>
+                                                </div>
+                                            </div>
+                                        </div>                                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button
+                                                onClick={() => handleAction(item.id, 'approve')}
+                                                disabled={isSubmitting}
+                                                className="p-2.5 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 rounded-xl hover:bg-green-100 transition-all active:scale-95 disabled:opacity-50"
+                                                title="Approve"
+                                            >
+                                                {isSubmitting && actionToConfirm?.id === item.id && actionToConfirm?.action === 'approve' ? (
+                                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                                ) : (
+                                                    <CheckCircle className="w-5 h-5" />
+                                                )}
+                                            </button>
+                                            <button
+                                                onClick={() => handleAction(item.id, 'reject')}
+                                                disabled={isSubmitting}
+                                                className="p-2.5 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 rounded-xl hover:bg-red-100 transition-all active:scale-95 disabled:opacity-50"
+                                                title="Reject"
+                                            >
+                                                {isSubmitting && actionToConfirm?.id === item.id && actionToConfirm?.action === 'reject' ? (
+                                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                                ) : (
+                                                    <XCircle className="w-5 h-5" />
+                                                )}
+                                            </button>
+                                            <button
+                                                onClick={() => handleView(item)}
+                                                disabled={isSubmitting}
+                                                className="p-2.5 text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-all active:scale-95 disabled:opacity-50"
+                                                title="View Details"
+                                            >
+                                                <Eye className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
                         </div>
+                    </div>
+                </div>
 
-                        <div className="flex justify-between items-center pt-3 border-t border-gray-100 dark:border-gray-800">
-                            <p className="text-sm font-black text-gray-900 dark:text-gray-100">{item.amount}</p>
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={() => handleAction(item.id, 'approve')}
-                                    className="p-1.5 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 rounded-lg hover:bg-green-100"
-                                >
-                                    <CheckCircle className="w-4 h-4" />
-                                </button>
-                                <button
-                                    onClick={() => handleAction(item.id, 'reject')}
-                                    className="p-1.5 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 rounded-lg hover:bg-red-100"
-                                >
-                                    <XCircle className="w-4 h-4" />
-                                </button>
-                                <button
-                                    onClick={() => handleView(item)}
-                                    className="p-1.5 text-blue-600 dark:text-blue-400 bg-blue-50 rounded-lg hover:bg-blue-100"
-                                >
-                                    <Eye className="w-4 h-4" />
-                                </button>
+                {/* Sidebar: Action Center & Stats */}
+                <div className="space-y-6">
+                    {/* Action Center - Matching DriverOnboarding Style */}
+                    <div className="bg-blue-600 rounded-2xl p-6 text-white shadow-xl shadow-blue-200 dark:shadow-none overflow-hidden relative">
+                         {/* Decorative Background Element */}
+                        <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-2xl font-black"></div>
+                        
+                        <h3 className="text-xl font-black mb-2 tracking-tight">Action Center</h3>
+                        <p className="text-blue-100 text-xs mb-6 font-medium leading-relaxed">Review all operational requests carefully. Approval triggers systematic inventory updates.</p>
+
+                        <div className="space-y-3">
+                             <button
+                                onClick={fetchPending}
+                                disabled={loading}
+                                className="w-full py-4 bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 rounded-xl font-black shadow-lg hover:shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2 text-sm uppercase tracking-widest disabled:opacity-50"
+                            >
+                                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Clock className="w-4 h-4" />}
+                                {loading ? 'Updating...' : 'Refresh Queue'}
+                            </button>
+                            <p className="text-[10px] text-center text-blue-200 font-bold uppercase tracking-widest">Last Updated: {new Date().toLocaleTimeString()}</p>
+                        </div>
+                    </div>
+
+                    {/* Stats List */}
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 shadow-sm">
+                        <h4 className="font-black text-gray-900 dark:text-gray-100 mb-6 flex items-center justify-between text-xs uppercase tracking-widest border-b border-gray-50 dark:border-gray-900 pb-4">
+                            Operational Insight
+                            <div className="text-[10px] bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full uppercase tracking-widest">Live</div>
+                        </h4>
+                        
+                        <div className="space-y-6">
+                            <div className="flex items-start gap-4">
+                                <div className="mt-0.5 w-10 h-10 rounded-xl bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400 flex items-center justify-center flex-shrink-0 shadow-sm">
+                                    <Clock className="w-5 h-5" />
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Total Pending</p>
+                                    <p className="text-xl font-black text-gray-900 dark:text-white">{approvals.length}</p>
+                                    <div className="h-1.5 w-full bg-gray-100 dark:bg-gray-900 rounded-full mt-2 overflow-hidden">
+                                        <div className="h-full bg-orange-500 rounded-full" style={{ width: `${Math.min(100, approvals.length * 10)}%` }}></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex items-start gap-4">
+                                <div className="mt-0.5 w-10 h-10 rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 flex items-center justify-center flex-shrink-0 shadow-sm">
+                                    <Fuel className="w-5 h-5" />
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Supply Requests</p>
+                                    <p className="text-xl font-black text-gray-900 dark:text-white">{approvals.filter(a => a.type === 'Supply').length}</p>
+                                    <div className="h-1.5 w-full bg-gray-100 dark:bg-gray-900 rounded-full mt-2 overflow-hidden">
+                                        <div className="h-full bg-blue-500 rounded-full" style={{ width: `${(approvals.filter(a => a.type === 'Supply').length / (approvals.length || 1)) * 100}%` }}></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex items-start gap-4">
+                                <div className="mt-0.5 w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 flex items-center justify-center flex-shrink-0 shadow-sm">
+                                    <CheckCircle className="w-5 h-5" />
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Audit Required</p>
+                                    <p className="text-xs font-bold text-gray-600 dark:text-gray-400 mt-1">Manual verification of documents required for high-volume loads.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
-                ))}
-            </div>
 
-            {/* Approvals Table (Visible on desktop only) */}
-            <div className="hidden md:block bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead>
-                            <tr className="bg-gray-50 dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
-                                <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase">Type</th>
-                                <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase">Details</th>
-                                <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase">Amount</th>
-                                <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase">Requested By</th>
-                                <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase">Date</th>
-                                <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase">Status</th>
-                                <th className="text-right py-4 px-6 text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
-                            {loading ? (
-                                <tr>
-                                    <td colSpan={7} className="py-12 text-center text-gray-400 dark:text-gray-500 text-sm">Loading...</td>
-                                </tr>
-                            ) : filteredApprovals.length === 0 ? (
-                                <tr>
-                                    <td colSpan={7} className="py-12 text-center text-gray-400 dark:text-gray-500 text-sm">
-                                        No pending requests found
-                                    </td>
-                                </tr>
-                            ) : (
-                                filteredApprovals.map((item) => (
-                                    <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
-                                        <td className="py-4 px-6">
-                                            <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${item.type === 'Supply' ? 'bg-blue-100 text-blue-700' :
-                                                item.type === 'Purchase' ? 'bg-green-100 text-green-700' :
-                                                    item.type === 'Trans-load' ? 'bg-purple-100 text-purple-700' :
-                                                        item.type === 'Disbursement' ? 'bg-emerald-100 text-emerald-700' :
-                                                            'bg-orange-100 text-orange-700'
-                                                }`}>
-                                                {item.type}
-                                            </span>
-                                        </td>
-                                        <td className="py-4 px-6">
-                                            <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{item.details}</p>
-                                        </td>
-                                        <td className="py-4 px-6">
-                                            <p className="text-sm font-black text-gray-900 dark:text-gray-100">{item.amount}</p>
-                                        </td>
-                                        <td className="py-4 px-6 text-sm text-gray-600 dark:text-gray-400">{item.requestedBy}</td>
-                                        <td className="py-4 px-6 text-sm text-gray-500 dark:text-gray-400">{item.date}</td>
-                                        <td className="py-4 px-6">
-                                            <div className="flex items-center gap-1.5">
-                                                <Clock className="w-3.5 h-3.5 text-orange-500" />
-                                                <span className="text-xs font-semibold text-orange-600">{item.status}</span>
-                                            </div>
-                                        </td>
-                                        <td className="py-4 px-6 text-right">
-                                            <div className="flex justify-end gap-2">
-                                                <button
-                                                    onClick={() => handleAction(item.id, 'approve')}
-                                                    className="p-1.5 text-green-600 dark:text-green-400 hover:bg-green-50 rounded-lg transition-colors"
-                                                    title="Approve"
-                                                >
-                                                    <CheckCircle className="w-5 h-5" />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleAction(item.id, 'reject')}
-                                                    className="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-50 rounded-lg transition-colors"
-                                                    title="Reject"
-                                                >
-                                                    <XCircle className="w-5 h-5" />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleView(item)}
-                                                    className="p-1.5 text-gray-400 dark:text-gray-500 hover:bg-gray-50 rounded-lg"
-                                                    title="View details"
-                                                >
-                                                    <Eye className="w-5 h-5" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                    <div className="bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-6 border border-gray-100 dark:border-gray-800">
+                         <div className="flex items-center gap-3 mb-4">
+                            <Info className="w-4 h-4 text-gray-400" />
+                            <h5 className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Verification Status</h5>
+                         </div>
+                         <p className="text-xs text-gray-500 dark:text-gray-400 font-medium leading-relaxed">
+                            System audit is currently <span className="text-green-600 dark:text-green-400 font-black">STABLE</span>. 
+                            Approved items are moved to historical logs immediately.
+                         </p>
+                    </div>
                 </div>
             </div>
 
@@ -404,12 +430,14 @@ export function ApprovalsPage() {
                             </button>
                             <button
                                 onClick={confirmAction}
-                                className={`px-6 py-2.5 rounded-lg text-sm font-bold text-white shadow-sm transition-all transform hover:scale-105 ${actionToConfirm.action === 'approve'
+                                disabled={isSubmitting}
+                                className={`px-6 py-2.5 rounded-lg text-sm font-bold text-white shadow-sm transition-all transform hover:scale-105 disabled:opacity-50 disabled:scale-100 flex items-center gap-2 ${actionToConfirm.action === 'approve'
                                     ? 'bg-green-600 hover:bg-green-700 shadow-green-200'
                                     : 'bg-red-600 hover:bg-red-700 shadow-red-200'
                                     }`}
                             >
-                                {actionToConfirm.action === 'approve' ? 'Approve Request' : 'Reject Request'}
+                                {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                                {isSubmitting ? 'Processing...' : (actionToConfirm.action === 'approve' ? 'Approve Request' : 'Reject Request')}
                             </button>
                         </div>
                     </div>

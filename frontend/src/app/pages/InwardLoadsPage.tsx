@@ -36,6 +36,7 @@ export function InwardLoadsPage() {
     const [loading, setLoading] = useState(true);
     const [showAddModal, setShowAddModal] = useState(false);
     const [formLoading, setFormLoading] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState({
         truckId: '',
         quantity: '',
@@ -135,13 +136,33 @@ export function InwardLoadsPage() {
     };
 
     const handleApprove = async (id: string) => {
+        setIsSubmitting(true);
         try {
             const resp = await apiRequest(`/api/inwardloads/${id}/approve`, { method: 'POST' });
             if (resp.ok) {
                 toast.success("Load approved");
                 fetchLoads();
+            } else {
+                const err = await resp.json();
+                toast.error(err.message || "Failed to approve load");
             }
-        } catch (err) { }
+        } catch (err) {
+            toast.error("Connection error");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const filteredLoads = loads.filter(l =>
+        l.truckRegNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        l.driverName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (l.depotName || 'Direct Company Load').toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const stats = {
+        totalVolume: filteredLoads.reduce((acc, l) => acc + l.quantity, 0),
+        pending: filteredLoads.filter(l => l.status === 'Pending').length,
+        count: filteredLoads.length
     };
 
     return (
@@ -154,6 +175,22 @@ export function InwardLoadsPage() {
                 <button onClick={() => setShowAddModal(true)} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all font-bold text-sm">
                     <Plus className="w-4 h-4" /> Record New Disbursement
                 </button>
+            </div>
+
+            {/* KPI Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 shadow-sm">
+                    <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Total Volume (Filtered)</p>
+                    <p className="text-2xl font-black text-gray-900 dark:text-gray-100">{stats.totalVolume.toLocaleString()} L</p>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 shadow-sm">
+                    <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Pending Approval</p>
+                    <p className="text-2xl font-black text-orange-500">{stats.pending}</p>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 shadow-sm">
+                    <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Total Records</p>
+                    <p className="text-2xl font-black text-blue-600 dark:text-blue-400">{stats.count}</p>
+                </div>
             </div>
 
             <div className="flex items-center gap-4 bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
@@ -189,13 +226,7 @@ export function InwardLoadsPage() {
                     <>
                     {/* Mobile Card View */}
                     <div className="md:hidden divide-y divide-gray-50 dark:divide-gray-800">
-                        {loads
-                            .filter(l =>
-                                l.truckRegNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                l.driverName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                (l.depotName || 'Direct Company Load').toLowerCase().includes(searchTerm.toLowerCase())
-                            )
-                            .map(l => (
+                        {filteredLoads.map(l => (
                                 <div key={l.id} className="p-4 bg-white dark:bg-gray-800 space-y-3">
                                     <div className="flex justify-between items-start">
                                         <div>
@@ -219,9 +250,11 @@ export function InwardLoadsPage() {
                                     {l.status === 'Pending' && (
                                         <button 
                                             onClick={() => handleApprove(l.id)} 
-                                            className="w-full py-2 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-xl border border-green-100 hover:bg-green-100 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
+                                            disabled={isSubmitting}
+                                            className="w-full py-2 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-xl border border-green-100 hover:bg-green-100 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-50"
                                         >
-                                            <CheckCircle className="w-3.5 h-3.5" /> Approve Disbursement
+                                            {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
+                                            {isSubmitting ? "Approving..." : "Approve Disbursement"}
                                         </button>
                                     )}
                                 </div>
@@ -241,13 +274,7 @@ export function InwardLoadsPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
-                            {loads
-                                .filter(l =>
-                                    l.truckRegNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                    l.driverName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                    (l.depotName || 'Direct Company Load').toLowerCase().includes(searchTerm.toLowerCase())
-                                )
-                                .map(l => (
+                            {filteredLoads.map(l => (
                                     <tr key={l.id} className="hover:bg-gray-50/50 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="flex flex-col">
@@ -270,8 +297,12 @@ export function InwardLoadsPage() {
                                         </td>
                                         <td className="px-6 py-4">
                                             {l.status === 'Pending' && (
-                                                <button onClick={() => handleApprove(l.id)} className="p-2 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg border border-green-100 hover:bg-green-100">
-                                                    <CheckCircle className="w-4 h-4" />
+                                                <button 
+                                                    onClick={() => handleApprove(l.id)} 
+                                                    disabled={isSubmitting}
+                                                    className="p-2 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg border border-green-100 hover:bg-green-100 disabled:opacity-50"
+                                                >
+                                                    {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
                                                 </button>
                                             )}
                                         </td>

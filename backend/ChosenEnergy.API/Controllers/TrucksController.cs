@@ -3,19 +3,22 @@ using Microsoft.AspNetCore.Mvc;
 using Dapper;
 using ChosenEnergy.API.Data;
 using ChosenEnergy.API.Models;
+using ChosenEnergy.API.Services;
 
 namespace ChosenEnergy.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/trucks")]
 [Authorize]
 public class TrucksController : ControllerBase
 {
     private readonly IDbConnectionFactory _connectionFactory;
+    private readonly IDailyLogService _dailyLogService;
 
-    public TrucksController(IDbConnectionFactory connectionFactory)
+    public TrucksController(IDbConnectionFactory connectionFactory, IDailyLogService dailyLogService)
     {
         _connectionFactory = connectionFactory;
+        _dailyLogService = dailyLogService;
     }
 
     [HttpGet]
@@ -269,6 +272,13 @@ public class TrucksController : ControllerBase
              transaction.Rollback();
              return BadRequest(new { success = false, message = ex.Message });
         }
+    }
+
+    [HttpGet("{id}/balance")]
+    public async Task<IActionResult> GetBalance(Guid id)
+    {
+        var balance = await _dailyLogService.GetTruckBalanceAsync(id, DateTime.UtcNow);
+        return Ok(new { success = true, balance });
     }
 }
 

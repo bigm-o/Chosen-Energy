@@ -33,6 +33,11 @@ public class TransloadsController : ControllerBase
         var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userIdStr)) return Unauthorized();
 
+        if (string.IsNullOrWhiteSpace(transload.SlipUrl))
+        {
+            return BadRequest(new { success = false, message = "Transload slip upload is required." });
+        }
+
         try
         {
             var created = await _transloadService.CreateAsync(transload, Guid.Parse(userIdStr));

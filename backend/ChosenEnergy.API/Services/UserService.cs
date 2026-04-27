@@ -53,4 +53,21 @@ public class UserService : IUserService
     {
         return await _userRepository.DeleteAsync(id);
     }
+
+    public async Task<bool> UpdatePermissionsAsync(Guid id, List<string> permissions)
+    {
+        var json = System.Text.Json.JsonSerializer.Serialize(permissions);
+        return await _userRepository.UpdatePermissionsAsync(id, json);
+    }
+
+    public async Task<bool> ResetPasswordAsync(Guid id, string newPassword, bool requiresPasswordChange)
+    {
+        var passwordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+        return await _userRepository.UpdatePasswordAsync(id, passwordHash, requiresPasswordChange);
+    }
+
+    public async Task<bool> UpdateLastLoginAsync(Guid id)
+    {
+        return await _userRepository.UpdateLastLoginAsync(id);
+    }
 }

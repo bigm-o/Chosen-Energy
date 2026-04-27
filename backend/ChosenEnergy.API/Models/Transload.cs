@@ -14,9 +14,11 @@ public class Transload
     public string Status { get; set; } = "Pending"; // approval_status: Pending, Approved, Rejected
     public Guid? ReceivingDriverId { get; set; }
     public string? ReceivingDriverName { get; set; }
+    public string? SourceDriverName { get; set; }
     public bool IsConfirmedByReceiver { get; set; }
     public DateTime? ReceiverConfirmedAt { get; set; }
     public string? TransloadType { get; set; } // S-S, L-S, L-L
+    public string? SlipUrl { get; set; }
     public Guid? CreatedBy { get; set; }
     public string? CreatedByName { get; set; }
     public Guid? ApprovedBy { get; set; }

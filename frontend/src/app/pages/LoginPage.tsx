@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Mail, Lock, Eye, EyeOff, ShieldCheck, Zap, Activity } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ShieldCheck, Zap, Activity, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function LoginPage() {
@@ -145,11 +145,11 @@ export function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full h-14 bg-gray-900 hover:bg-black disabled:bg-gray-400 text-white font-black rounded-2xl transition-all shadow-xl shadow-gray-200 active:scale-[0.98] flex items-center justify-center gap-3 mt-4"
+              className="w-full h-14 bg-gray-900 dark:bg-blue-600 dark:hover:bg-blue-700 hover:bg-black disabled:opacity-50 text-white font-black rounded-2xl transition-all shadow-xl shadow-gray-200 dark:shadow-none active:scale-[0.98] flex items-center justify-center gap-3 mt-4"
             >
               {isLoading ? (
                 <>
-                  <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                  <Loader2 className="w-5 h-5 animate-spin" />
                   <span>Verifying Access...</span>
                 </>
               ) : (

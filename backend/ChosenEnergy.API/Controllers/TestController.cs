@@ -8,10 +8,14 @@ namespace ChosenEnergy.API.Controllers;
 public class TestController : ControllerBase
 {
     private readonly IAuthService _authService;
+    private readonly IDriverService _driverService;
+    private readonly IUserService _userService;
 
-    public TestController(IAuthService authService)
+    public TestController(IAuthService authService, IDriverService driverService, IUserService userService)
     {
         _authService = authService;
+        _driverService = driverService;
+        _userService = userService;
     }
 
     [HttpGet("check-user/{email}")]
@@ -30,5 +34,31 @@ public class TestController : ControllerBase
             isActive = user.IsActive,
             hasPassword = !string.IsNullOrEmpty(user.PasswordHash)
         });
+    }
+
+    [HttpGet("all-drivers-access")]
+    public async Task<IActionResult> GetAllDriversAccess()
+    {
+        var drivers = await _driverService.GetAllAsync();
+        var driversWithAccess = new List<object>();
+
+        foreach(var d in drivers)
+        {
+            if (d.UserId.HasValue)
+            {
+                var u = await _userService.GetByIdAsync(d.UserId.Value);
+                if (u != null)
+                {
+                    driversWithAccess.Add(new {
+                        FullName = d.FullName,
+                        Email = u.Email,
+                        Username = u.Username,
+                        DefaultPassword = d.Phone,
+                        IsAppActive = u.IsActive
+                    });
+                }
+            }
+        }
+        return Ok(driversWithAccess);
     }
 }

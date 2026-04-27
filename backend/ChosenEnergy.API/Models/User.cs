@@ -20,4 +20,15 @@ public class User
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public string ThemePreference { get; set; } = "light";
+    
+    // User Management properties
+    public string? CustomPermissionsRaw { get; set; }
+    
+    public List<string> CustomPermissions 
+    { 
+        get => string.IsNullOrEmpty(CustomPermissionsRaw) ? new List<string>() : System.Text.Json.JsonSerializer.Deserialize<List<string>>(CustomPermissionsRaw) ?? new List<string>();
+        set => CustomPermissionsRaw = System.Text.Json.JsonSerializer.Serialize(value);
+    }
+    public bool RequiresPasswordChange { get; set; }
+    public DateTime? LastLoginAt { get; set; }
 }

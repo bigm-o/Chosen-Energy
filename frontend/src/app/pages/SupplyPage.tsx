@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Search, Plus, Filter, Download as DownloadIcon, Eye, CheckCircle, XCircle, Trash2, Calendar, FileText, ArrowRight, User, Truck, DollarSign, Fuel, Info, Edit2, AlertCircle, Clock } from 'lucide-react';
+import { Search, Plus, Filter, Download as DownloadIcon, Eye, CheckCircle, XCircle, Trash2, Calendar, FileText, ArrowRight, User, Truck, DollarSign, Fuel, Info, Edit2, AlertCircle, Clock, Loader2 } from 'lucide-react';
 import { apiRequest, getFileUrl } from '@/utils/api';
 import { Modal } from '@/app/components/Modal';
+import { toast } from 'sonner';
 
 interface Supply {
   id: string;
@@ -58,6 +59,7 @@ export function SupplyPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [modalError, setModalError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [dateFilter, setDateFilter] = useState({ startDate: '', endDate: '' });
   const [exportDateRange, setExportDateRange] = useState({ startDate: '', endDate: '' });
@@ -92,8 +94,14 @@ export function SupplyPage() {
     try {
       const response = await apiRequest('/api/supplies');
       const data = await response.json();
-      setSupplies(data.data || []);
-      setFilteredSupplies(data.data || []);
+      const suppliesWithCalculatedRates = (data.data || []).map((s: Supply) => ({
+        ...s,
+        pricePerLitre: (s.pricePerLitre && s.pricePerLitre > 0) 
+          ? s.pricePerLitre 
+          : (s.quantity > 0 ? s.totalAmount / s.quantity : 0)
+      }));
+      setSupplies(suppliesWithCalculatedRates);
+      setFilteredSupplies(suppliesWithCalculatedRates);
     } catch (err) {
       setError('Failed to load supplies');
     } finally {
@@ -120,6 +128,25 @@ export function SupplyPage() {
       console.error('Error loading dropdowns', err);
     }
   };
+
+  const handleCustomerChange = async (customerId: string) => {
+    setFormData(prev => ({ ...prev, customerId, pricePerLitre: '' }));
+    if (!customerId) return;
+
+    try {
+      const resp = await apiRequest(`/api/settings/customer-prices/${customerId}`);
+      const data = await resp.json();
+      if (data.success) {
+        setFormData(prev => ({ ...prev, customerId, pricePerLitre: data.data.toString() }));
+        if (data.isSpecific) {
+          toast.info("Specific rate applied for this customer");
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch customer price", err);
+    }
+  };
+
 
   const compressImage = async (file: File): Promise<File> => {
     return new Promise((resolve, reject) => {
@@ -172,7 +199,7 @@ export function SupplyPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setModalError(null);
-    setLoading(true);
+    setIsSubmitting(true);
     try {
       if (isEditing && selectedSupply) {
         // Handle Update
@@ -286,7 +313,7 @@ export function SupplyPage() {
 
   const confirmApprove = async () => {
     if (!supplyToApprove) return;
-    setLoading(true);
+    setIsSubmitting(true);
     try {
       const response = await apiRequest(`/api/supplies/${supplyToApprove.id}/approve`, { method: 'POST' });
       if (response.ok) {
@@ -301,7 +328,7 @@ export function SupplyPage() {
     } catch (err) {
       setError('Error approving sale');
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -313,7 +340,7 @@ export function SupplyPage() {
 
   const confirmReject = async () => {
     if (!supplyToReject || !rejectReason) return;
-    setLoading(true);
+    setIsSubmitting(true);
     try {
       const response = await apiRequest(`/api/supplies/${supplyToReject.id}/reject`, {
         method: 'POST',
@@ -321,7 +348,7 @@ export function SupplyPage() {
         body: JSON.stringify({ reason: rejectReason })
       });
       if (response.ok) {
-        setSuccess('Sale rejected');
+        setSuccess('Sale rejected successfully');
         setShowRejectModal(false);
         setSupplyToReject(null);
         setRejectReason('');
@@ -333,7 +360,7 @@ export function SupplyPage() {
     } catch (err) {
       setModalError('Error rejecting sale');
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -345,32 +372,33 @@ export function SupplyPage() {
 
   const confirmDelete = async () => {
     if (!supplyToDelete) return;
-    setLoading(true);
+    setIsSubmitting(true);
+    setModalError(null);
     try {
       const response = await apiRequest(`/api/supplies/${supplyToDelete.id}`, { method: 'DELETE' });
       if (response.ok) {
-        setSuccess('Sale record deleted successfully');
+        setSuccess('Sale request deleted successfully');
         setShowDeleteModal(false);
         setSupplyToDelete(null);
         fetchSupplies();
       } else {
         const err = await response.json();
-        setModalError(err.message || 'Failed to delete');
+        setModalError(err.message || 'Failed to delete request');
       }
     } catch (err) {
-      setModalError('Error deleting record');
+      setModalError('Error deleting request');
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   // Filtered supplies now handled by useEffect
 
   const stats = {
-    totalSales: supplies.length,
-    totalVolume: supplies.filter(s => s.status === 'Approved').reduce((acc, s) => acc + s.quantity, 0),
-    totalRevenue: supplies.filter(s => s.status === 'Approved').reduce((acc, s) => acc + s.totalAmount, 0),
-    pending: supplies.filter(s => s.status === 'Pending').length
+    totalSales: filteredSupplies.length,
+    totalVolume: filteredSupplies.filter(s => s.status === 'Approved').reduce((acc, s) => acc + s.quantity, 0),
+    totalRevenue: filteredSupplies.filter(s => s.status === 'Approved').reduce((acc, s) => acc + s.totalAmount, 0),
+    pending: filteredSupplies.filter(s => s.status === 'Pending').length
   };
 
   const totalAmount = formData.quantity && formData.pricePerLitre
@@ -400,7 +428,7 @@ export function SupplyPage() {
 
   const confirmApproveEdit = async () => {
     if (!selectedSupply) return;
-    setLoading(true);
+    setIsSubmitting(true);
     try {
       const response = await apiRequest(`/api/supplies/${selectedSupply.id}/approve-edit`, {
         method: 'POST'
@@ -416,7 +444,7 @@ export function SupplyPage() {
     } catch (err) {
       setModalError('Connection error');
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -427,7 +455,7 @@ export function SupplyPage() {
 
   const confirmRejectEdit = async () => {
     if (!selectedSupply) return;
-    setLoading(true);
+    setIsSubmitting(true);
     try {
       const response = await apiRequest(`/api/supplies/${selectedSupply.id}/reject-edit`, {
         method: 'POST'
@@ -443,13 +471,20 @@ export function SupplyPage() {
     } catch (err) {
       setModalError('Connection error');
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   const canApprove = user?.role === 'MD';
 
-  if (loading && supplies.length === 0) return <div className="p-6">Loading...</div>;
+  if (loading && supplies.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 gap-4 text-gray-400">
+        <Loader2 className="w-12 h-12 animate-spin" />
+        <p className="text-sm font-bold uppercase tracking-[0.2em]">Synchronizing Sales Data...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -548,13 +583,17 @@ export function SupplyPage() {
               <p className="text-xs text-gray-500 dark:text-gray-400">{new Date(supply.supplyDate).toLocaleDateString('en-GB')}</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 dark:text-gray-400 mb-3 bg-gray-50 dark:bg-gray-900/50 p-2 rounded-lg">
+            <div className="grid grid-cols-3 gap-2 text-xs text-gray-600 dark:text-gray-400 mb-3 bg-gray-50 dark:bg-gray-900/50 p-2 rounded-lg">
               <div>
                 <p className="font-semibold text-gray-400 dark:text-gray-500 uppercase text-[10px]">Volume</p>
                 <p className="font-medium text-gray-900 dark:text-gray-100">{supply.quantity.toLocaleString()} L</p>
               </div>
               <div>
-                <p className="font-semibold text-gray-400 dark:text-gray-500 uppercase text-[10px]">Amount</p>
+                <p className="font-semibold text-gray-400 dark:text-gray-500 uppercase text-[10px]">Rate</p>
+                <p className="font-medium text-gray-900 dark:text-gray-100">₦{supply.pricePerLitre.toLocaleString()}</p>
+              </div>
+              <div>
+                <p className="font-semibold text-gray-400 dark:text-gray-500 uppercase text-[10px]">Total</p>
                 <p className="font-medium text-green-700">₦{supply.totalAmount.toLocaleString()}</p>
               </div>
             </div>
@@ -610,6 +649,7 @@ export function SupplyPage() {
               <th className="text-left py-4 px-6 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
               <th className="text-left py-4 px-6 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Customer</th>
               <th className="text-left py-4 px-6 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Volume (L)</th>
+              <th className="text-left py-4 px-6 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Rate (₦)</th>
               <th className="text-left py-4 px-6 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Amount</th>
               <th className="text-left py-4 px-6 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Delivery Details</th>
               <th className="text-left py-4 px-6 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
@@ -629,6 +669,7 @@ export function SupplyPage() {
                   <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{supply.customerName}</p>
                 </td>
                 <td className="py-4 px-6 text-sm text-gray-900 dark:text-gray-100 font-semibold">{supply.quantity.toLocaleString()}</td>
+                <td className="py-4 px-6 text-sm text-gray-900 dark:text-gray-100">₦{supply.pricePerLitre.toLocaleString()}</td>
                 <td className="py-4 px-6 text-sm font-bold text-gray-900 dark:text-gray-100 text-green-700">₦{supply.totalAmount.toLocaleString()}</td>
                 <td className="py-4 px-6">
                   <div className="flex flex-col">
@@ -744,8 +785,8 @@ export function SupplyPage() {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Customer</label>
               <select
                 value={formData.customerId}
-                onChange={e => setFormData({ ...formData, customerId: e.target.value })}
-                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-gray-100"
+                onChange={e => handleCustomerChange(e.target.value)}
+                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-gray-100 font-bold"
                 required
               >
                 <option value="">Select Customer</option>
@@ -760,7 +801,7 @@ export function SupplyPage() {
               <select
                 value={formData.driverId}
                 onChange={e => setFormData({ ...formData, driverId: e.target.value })}
-                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-gray-100"
+                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-gray-100 font-bold"
                 required
               >
                 <option value="">Select Driver</option>
@@ -772,11 +813,11 @@ export function SupplyPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 font-bold">Quantity (Litres)</label>
-              <input
+               <input
                 type="number"
                 value={formData.quantity}
                 onChange={e => setFormData({ ...formData, quantity: e.target.value })}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent font-bold text-gray-900 dark:text-white placeholder-gray-400"
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent font-bold text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                 placeholder="e.g., 5000"
                 required
               />
@@ -784,11 +825,11 @@ export function SupplyPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 font-bold">Price per Litre (₦)</label>
-              <input
+               <input
                 type="number"
                 value={formData.pricePerLitre}
                 onChange={e => setFormData({ ...formData, pricePerLitre: e.target.value })}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent font-bold text-gray-900 dark:text-white placeholder-gray-400"
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent font-bold text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                 placeholder="e.g., 950"
                 required
               />
@@ -831,7 +872,7 @@ export function SupplyPage() {
               <textarea
                 value={editReason}
                 onChange={e => setEditReason(e.target.value)}
-                className="w-full px-4 py-2 border-2 border-blue-200 bg-blue-50 dark:bg-gray-900 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent min-h-[80px] text-gray-900 dark:text-gray-100 placeholder-gray-400"
+                className="w-full px-4 py-2 border-2 border-blue-200 bg-blue-50 dark:bg-gray-900 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent min-h-[80px] text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                 placeholder="Explain why this change is necessary..."
                 required={isEditing}
               />
@@ -848,10 +889,17 @@ export function SupplyPage() {
             </button>
             <button
               type="submit"
-              disabled={loading}
-              className={`px-6 py-2 text-white rounded-lg transition-colors disabled:opacity-50 ${isEditing ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-900 hover:bg-gray-800'}`}
+              disabled={isSubmitting}
+              className={`px-6 py-2 text-white rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 ${isEditing ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-900 hover:bg-gray-800'}`}
             >
-              {loading ? (isEditing ? 'Updating...' : 'Creating...') : (isEditing ? 'Submit Edit Request' : 'Create Supply')}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>{isEditing ? 'Updating...' : 'Creating...'}</span>
+                </>
+              ) : (
+                <span>{isEditing ? 'Submit Edit Request' : 'Create Supply'}</span>
+              )}
             </button>
           </div>
         </form>
@@ -903,12 +951,12 @@ export function SupplyPage() {
             </button>
             <button
               onClick={confirmDelete}
-              disabled={loading}
+              disabled={isSubmitting}
               className="px-8 py-2.5 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 disabled:opacity-50 transition-colors flex items-center gap-2"
             >
-              {loading ? (
+              {isSubmitting ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                   <span>Deleting...</span>
                 </>
               ) : (
@@ -1023,6 +1071,10 @@ export function SupplyPage() {
                 <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{selectedSupply.quantity.toLocaleString()} L</p>
               </div>
               <div>
+                <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Price Rate</p>
+                <p className="text-lg font-bold text-gray-900 dark:text-gray-100">₦{selectedSupply.pricePerLitre.toLocaleString()}</p>
+              </div>
+              <div>
                 <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Total Amount</p>
                 <p className="text-lg font-bold text-green-700">₦{selectedSupply.totalAmount.toLocaleString()}</p>
               </div>
@@ -1132,12 +1184,12 @@ export function SupplyPage() {
             </button>
             <button
               onClick={confirmApprove}
-              disabled={loading}
+              disabled={isSubmitting}
               className="px-8 py-2.5 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 disabled:opacity-50 transition-colors flex items-center gap-2"
             >
-              {loading ? (
+              {isSubmitting ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                   <span>Approving...</span>
                 </>
               ) : (
@@ -1277,10 +1329,17 @@ export function SupplyPage() {
             </button>
             <button
               onClick={confirmApproveEdit}
-              disabled={loading}
-              className="px-8 py-2.5 bg-purple-600 text-white rounded-lg text-sm font-bold hover:bg-purple-700 disabled:opacity-50 transition-colors shadow-sm"
+              disabled={isSubmitting}
+              className="px-8 py-2.5 bg-purple-600 text-white rounded-lg text-sm font-bold hover:bg-purple-700 disabled:opacity-50 transition-colors flex items-center gap-2 shadow-sm"
             >
-              Confirm Changes
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Confirming...</span>
+                </>
+              ) : (
+                <span>Confirm Changes</span>
+              )}
             </button>
           </div>
         </div>
@@ -1311,10 +1370,17 @@ export function SupplyPage() {
             </button>
             <button
               onClick={confirmRejectEdit}
-              disabled={loading}
-              className="px-8 py-2.5 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700 disabled:opacity-50 transition-colors"
+              disabled={isSubmitting}
+              className="px-8 py-2.5 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700 disabled:opacity-50 transition-colors flex items-center gap-2"
             >
-              Discard Edit
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Discarding...</span>
+                </>
+              ) : (
+                <span>Discard Edit</span>
+              )}
             </button>
           </div>
         </div>
@@ -1361,12 +1427,12 @@ export function SupplyPage() {
             </button>
             <button
               onClick={confirmReject}
-              disabled={loading || !rejectReason}
+              disabled={isSubmitting || !rejectReason}
               className="px-8 py-2.5 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 disabled:opacity-50 transition-colors flex items-center gap-2"
             >
-              {loading ? (
+              {isSubmitting ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                   <span>Rejecting...</span>
                 </>
               ) : (

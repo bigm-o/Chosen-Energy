@@ -27,4 +27,18 @@ public class UserResponse
     public string Role { get; set; } = string.Empty;
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
+    public List<string> CustomPermissions { get; set; } = new();
+    public bool RequiresPasswordChange { get; set; }
+    public DateTime? LastLoginAt { get; set; }
+}
+
+public class UpdatePermissionsRequest
+{
+    public List<string> Permissions { get; set; } = new();
+}
+
+public class ResetPasswordRequest
+{
+    public string NewPassword { get; set; } = string.Empty;
+    public bool RequiresPasswordChange { get; set; } = true;
 }

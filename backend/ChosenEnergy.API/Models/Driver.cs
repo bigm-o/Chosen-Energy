@@ -23,4 +23,7 @@ public class Driver
     // Navigation properties
     public string? TruckRegistration { get; set; }
     public string? TruckType { get; set; }
+    public bool? IsUserActive { get; set; }
+    public string? AppEmail { get; set; }
+    public string? AppUsername { get; set; }
 }

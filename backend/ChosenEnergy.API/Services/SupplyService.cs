@@ -26,13 +26,15 @@ public class SupplyService : ISupplyService
     private readonly IAuditService _auditService;
     private readonly INotificationService _notificationService;
     private readonly IDailyLogService _dailyLogService;
+    private readonly IInvoiceService _invoiceService;
 
-    public SupplyService(IDbConnectionFactory connectionFactory, IAuditService auditService, INotificationService notificationService, IDailyLogService dailyLogService)
+    public SupplyService(IDbConnectionFactory connectionFactory, IAuditService auditService, INotificationService notificationService, IDailyLogService dailyLogService, IInvoiceService invoiceService)
     {
         _connectionFactory = connectionFactory;
         _auditService = auditService;
         _notificationService = notificationService;
         _dailyLogService = dailyLogService;
+        _invoiceService = invoiceService;
     }
 
     public async Task<IEnumerable<Supply>> GetAllAsync()
@@ -46,6 +48,7 @@ public class SupplyService : ISupplyService
                 s.truck_id as TruckId,
                 s.driver_id as DriverId,
                 s.quantity as Quantity,
+                s.price_per_litre as PricePerLitre,
                 s.total_amount as TotalAmount,
                 s.supply_date as SupplyDate,
                 s.status::text as Status,
@@ -84,6 +87,7 @@ public class SupplyService : ISupplyService
                 s.truck_id as TruckId,
                 s.driver_id as DriverId,
                 s.quantity as Quantity,
+                s.price_per_litre as PricePerLitre,
                 s.total_amount as TotalAmount,
                 s.supply_date as SupplyDate,
                 s.status::text as Status,
@@ -160,6 +164,7 @@ public class SupplyService : ISupplyService
                 sale_id as SaleId,
                 customer_id as CustomerId,
                 quantity as Quantity,
+                price_per_litre as PricePerLitre,
                 total_amount as TotalAmount,
                 status::text as Status,
                 created_at as CreatedAt;";
@@ -178,30 +183,7 @@ public class SupplyService : ISupplyService
             UserId = userId
         });
 
-        // Track invoice in the invoices table
-        if (!string.IsNullOrEmpty(supply.InvoiceUrl))
-        {
-            // Simple check if invoices table exists, as it might not be in DbInitializer
-            // But assuming it works as per existing code.
-            try 
-            {
-                await connection.ExecuteAsync(@"
-                    INSERT INTO invoices (supply_id, invoice_number, file_url, uploaded_by)
-                    VALUES (@SupplyId, @InvoiceNumber, @FileUrl, @UserId)",
-                    new
-                    {
-                        SupplyId = createdSupply.Id,
-                        InvoiceNumber = createdSupply.SaleId, 
-                        FileUrl = supply.InvoiceUrl,
-                        UserId = userId
-                    });
-            }
-            catch 
-            {
-                // Silently fail invoice tracking if table missing, strictly for robustness during this update
-                // In production, we'd ensure table exists.
-            }
-        }
+        // Track invoice - Removed old placeholder logic, now handled in ApproveAsync
 
         // Feature 5: Notifications
         await _notificationService.NotifyRoleAsync("MD", 
@@ -369,6 +351,18 @@ public class SupplyService : ISupplyService
                 await connection.ExecuteAsync(
                     "UPDATE depots SET current_stock = current_stock - @Quantity WHERE id = @DepotId",
                     new { Quantity = supply.Quantity, DepotId = supply.DepotId.Value }, transaction);
+            }
+
+            // --- AUTO-GENERATE INVOICE UPON APPROVAL ---
+            try 
+            {
+                // Default due date: 7 days from now
+                await _invoiceService.CreateFromSupplyAsync(updatedSupply.Id, DateTime.UtcNow.AddDays(7));
+            }
+            catch (Exception ex)
+            {
+                // Log but don't fail approval if invoicing fails
+                Console.WriteLine($"Invoicing failed for supply {updatedSupply.Id}: {ex.Message}");
             }
 
             transaction.Commit();
@@ -589,6 +583,7 @@ public class SupplyService : ISupplyService
                 s.truck_id as TruckId,
                 s.driver_id as DriverId,
                 s.quantity as Quantity,
+                s.price_per_litre as PricePerLitre,
                 s.total_amount as TotalAmount,
                 s.supply_date as SupplyDate,
                 s.status::text as Status,

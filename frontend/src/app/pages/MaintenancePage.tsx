@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { PageHeader } from '@/app/components/PageHeader';
-import { Plus, Wrench, Truck, Eye, PenTool, CheckCircle, AlertTriangle, AlertCircle } from 'lucide-react';
+import { Plus, Wrench, Truck, Eye, PenTool, CheckCircle, AlertTriangle, AlertCircle, Loader2 } from 'lucide-react';
 import { Modal } from '@/app/components/Modal';
 import { apiRequest } from '@/utils/api';
 import { toast } from 'sonner';
@@ -28,6 +28,7 @@ export function MaintenancePage() {
     const [maintenanceLogs, setMaintenanceLogs] = useState<MaintenanceLog[]>([]);
     const [trucks, setTrucks] = useState<Truck[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [showAddModal, setShowAddModal] = useState(false);
 
     // Form State
@@ -66,6 +67,7 @@ export function MaintenancePage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsSubmitting(true);
         try {
             const response = await apiRequest('/api/maintenance', {
                 method: 'POST',
@@ -90,12 +92,14 @@ export function MaintenancePage() {
             }
         } catch (err) {
             toast.error("Error logging maintenance");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     const handleComplete = async (id: string) => {
         if (!confirm("Mark this maintenance as completed? Truck will return to Active status.")) return;
-
+        setIsSubmitting(true);
         try {
             const response = await apiRequest(`/api/maintenance/${id}/status`, {
                 method: 'PUT',
@@ -111,12 +115,23 @@ export function MaintenancePage() {
             }
         } catch (err) {
             toast.error("Error updating status");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     const inWorkshop = trucks.filter(t => t.status === 'Maintenance').length;
     const completedMonth = maintenanceLogs.filter(l => l.status === 'Completed' && new Date(l.completedDate!).getMonth() === new Date().getMonth()).length;
     const totalCost = maintenanceLogs.reduce((sum, l) => sum + l.cost, 0);
+
+    if (loading && maintenanceLogs.length === 0) {
+        return (
+            <div className="flex flex-col items-center justify-center py-24 gap-4 text-gray-400">
+                <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
+                <p className="text-sm font-bold uppercase tracking-[0.2em]">Inspecting Fleet Health...</p>
+            </div>
+        );
+    }
 
     return (
         <div id="log-maintenance" className="space-y-6">
@@ -194,9 +209,11 @@ export function MaintenancePage() {
                                 {log.status !== 'Completed' && (
                                     <button
                                         onClick={() => handleComplete(log.id)}
-                                        className="w-full py-2.5 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-xl border border-green-100 hover:bg-green-100 text-xs font-bold flex items-center justify-center gap-2"
+                                        disabled={isSubmitting}
+                                        className="w-full py-2.5 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-xl border border-green-100 hover:bg-green-100 text-xs font-bold flex items-center justify-center gap-2 disabled:opacity-50"
                                     >
-                                        <CheckCircle className="w-4 h-4" /> Mark Completed
+                                        {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                                        {isSubmitting ? "Updating..." : "Mark Completed"}
                                     </button>
                                 )}
                             </div>
@@ -241,9 +258,11 @@ export function MaintenancePage() {
                                         {log.status !== 'Completed' && (
                                             <button
                                                 onClick={() => handleComplete(log.id)}
-                                                className="text-green-600 dark:text-green-400 hover:text-green-800 text-sm font-bold flex items-center gap-1 justify-end ml-auto"
+                                                disabled={isSubmitting}
+                                                className="text-green-600 dark:text-green-400 hover:text-green-800 text-sm font-bold flex items-center gap-1 justify-end ml-auto disabled:opacity-50"
                                             >
-                                                <CheckCircle className="w-4 h-4" /> Complete
+                                                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                                                {isSubmitting ? "Working..." : "Complete"}
                                             </button>
                                         )}
                                     </td>
@@ -319,8 +338,15 @@ export function MaintenancePage() {
                         />
                     </div>
                     <div className="flex gap-3 pt-4">
-                        <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 py-3 border border-gray-200 dark:border-gray-700 rounded-xl font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-50">Cancel</button>
-                        <button type="submit" className="flex-[2] py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700">Log & Submit</button>
+                        <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 py-3 border border-gray-200 dark:border-gray-700 rounded-xl font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-50 transition-colors">Cancel</button>
+                        <button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="flex-[2] py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                            {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                            {isSubmitting ? "Logging..." : "Log & Submit"}
+                        </button>
                     </div>
                 </form>
             </Modal>

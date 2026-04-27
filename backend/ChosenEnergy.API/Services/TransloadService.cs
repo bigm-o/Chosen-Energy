@@ -65,8 +65,8 @@ public class TransloadService : ITransloadService
 
         // 3. Insert
         var sql = @"
-            INSERT INTO transloading (source_truck_id, destination_truck_id, quantity, transfer_date, receiving_driver_id, transload_type, created_by, status)
-            VALUES (@SourceTruckId, @DestinationTruckId, @Quantity, @TransferDate, @ReceivingDriverId, @TransloadType, @UserId, 'Pending'::approval_status)
+            INSERT INTO transloading (source_truck_id, destination_truck_id, quantity, transfer_date, receiving_driver_id, transload_type, created_by, status, slip_url)
+            VALUES (@SourceTruckId, @DestinationTruckId, @Quantity, @TransferDate, @ReceivingDriverId, @TransloadType, @UserId, 'Pending'::approval_status, @SlipUrl)
             RETURNING id";
 
         var id = await connection.ExecuteScalarAsync<Guid>(sql, new
@@ -77,7 +77,8 @@ public class TransloadService : ITransloadService
             TransferDate = DateTime.UtcNow,
             ReceivingDriverId = destDriverId.Value,
             TransloadType = transloadType,
-            UserId = userId
+            UserId = userId,
+            SlipUrl = transload.SlipUrl
         });
 
         await _auditService.LogAsync(userId, "CreateTransload", "Transload", id, null, new { transload.Quantity, TransloadType = transloadType }, null);
@@ -157,11 +158,14 @@ public class TransloadService : ITransloadService
                 t.status::text as Status,
                 t.is_confirmed_by_receiver as IsConfirmedByReceiver,
                 t.transload_type as TransloadType,
-                u.full_name as CreatedByName
+                t.slip_url as SlipUrl,
+                u.full_name as CreatedByName,
+                sd.full_name as SourceDriverName
             FROM transloading t
             JOIN trucks st ON t.source_truck_id = st.id
             JOIN trucks dt ON t.destination_truck_id = dt.id
             JOIN users u ON t.created_by = u.id
+            LEFT JOIN drivers sd ON sd.assigned_truck_id = t.source_truck_id
             WHERE t.receiving_driver_id = @DriverId AND t.is_confirmed_by_receiver = FALSE AND t.status = 'Pending'::approval_status";
         
         return await connection.QueryAsync<Transload>(sql, new { DriverId = driverId });
@@ -182,13 +186,16 @@ public class TransloadService : ITransloadService
                 t.status::text as Status,
                 t.is_confirmed_by_receiver as IsConfirmedByReceiver,
                 t.transload_type as TransloadType,
+                t.slip_url as SlipUrl,
                 u.full_name as CreatedByName,
-                d.full_name as ReceivingDriverName
+                d.full_name as ReceivingDriverName,
+                sd.full_name as SourceDriverName
             FROM transloading t
             JOIN trucks st ON t.source_truck_id = st.id
             JOIN trucks dt ON t.destination_truck_id = dt.id
             JOIN users u ON t.created_by = u.id
             JOIN drivers d ON t.receiving_driver_id = d.id
+            LEFT JOIN drivers sd ON sd.assigned_truck_id = t.source_truck_id
             WHERE t.created_by = @UserId OR t.receiving_driver_id IN (SELECT id FROM drivers WHERE user_id = @UserId)
             ORDER BY t.created_at DESC";
         
@@ -210,13 +217,16 @@ public class TransloadService : ITransloadService
                 t.status::text as Status,
                 t.is_confirmed_by_receiver as IsConfirmedByReceiver,
                 t.transload_type as TransloadType,
+                t.slip_url as SlipUrl,
                 u.full_name as CreatedByName,
-                d.full_name as ReceivingDriverName
+                d.full_name as ReceivingDriverName,
+                sd.full_name as SourceDriverName
             FROM transloading t
             JOIN trucks st ON t.source_truck_id = st.id
             JOIN trucks dt ON t.destination_truck_id = dt.id
             JOIN users u ON t.created_by = u.id
             JOIN drivers d ON t.receiving_driver_id = d.id
+            LEFT JOIN drivers sd ON sd.assigned_truck_id = t.source_truck_id
             ORDER BY t.created_at DESC";
         
         return await connection.QueryAsync<Transload>(sql);
@@ -238,13 +248,16 @@ public class TransloadService : ITransloadService
                 t.is_confirmed_by_receiver as IsConfirmedByReceiver,
                 t.receiver_confirmed_at as ReceiverConfirmedAt,
                 t.transload_type as TransloadType,
+                t.slip_url as SlipUrl,
                 u.full_name as CreatedByName,
-                d.full_name as ReceivingDriverName
+                d.full_name as ReceivingDriverName,
+                sd.full_name as SourceDriverName
             FROM transloading t
             JOIN trucks st ON t.source_truck_id = st.id
             JOIN trucks dt ON t.destination_truck_id = dt.id
             JOIN users u ON t.created_by = u.id
             JOIN drivers d ON t.receiving_driver_id = d.id
+            LEFT JOIN drivers sd ON sd.assigned_truck_id = t.source_truck_id
             WHERE t.id = @Id";
         
         return (await connection.QueryFirstOrDefaultAsync<Transload>(sql, new { Id = id }))!;

@@ -66,10 +66,17 @@ export async function apiRequest(url: string, options: RequestInit = {}) {
     throw new Error('Session expired. Please login again.');
   }
 
-  const headers = {
+  const headers: any = {
     ...options.headers,
     ...(token && { 'Authorization': `Bearer ${token}` }),
   };
+
+  // Automatically set Content-Type to application/json if body is a string
+  // and no Content-Type is explicitly provided.
+  // DO NOT set it for FormData as fetch needs to set the boundary.
+  if (options.body && typeof options.body === 'string' && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   const response = await fetch(fullUrl, { ...options, headers });
 

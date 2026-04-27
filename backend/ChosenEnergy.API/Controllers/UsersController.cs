@@ -30,7 +30,10 @@ public class UsersController : ControllerBase
             FullName = u.FullName,
             Role = u.Role.ToString(),
             IsActive = u.IsActive,
-            CreatedAt = u.CreatedAt
+            CreatedAt = u.CreatedAt,
+            CustomPermissions = u.CustomPermissions,
+            RequiresPasswordChange = u.RequiresPasswordChange,
+            LastLoginAt = u.LastLoginAt
         });
         
         return Ok(new { success = true, data = response });
@@ -51,7 +54,10 @@ public class UsersController : ControllerBase
             FullName = user.FullName,
             Role = user.Role.ToString(),
             IsActive = user.IsActive,
-            CreatedAt = user.CreatedAt
+            CreatedAt = user.CreatedAt,
+            CustomPermissions = user.CustomPermissions,
+            RequiresPasswordChange = user.RequiresPasswordChange,
+            LastLoginAt = user.LastLoginAt
         }});
     }
 
@@ -69,7 +75,10 @@ public class UsersController : ControllerBase
                 FullName = user.FullName,
                 Role = user.Role.ToString(),
                 IsActive = user.IsActive,
-                CreatedAt = user.CreatedAt
+                CreatedAt = user.CreatedAt,
+                CustomPermissions = user.CustomPermissions,
+                RequiresPasswordChange = user.RequiresPasswordChange,
+                LastLoginAt = user.LastLoginAt
             }, message = "User created successfully" });
         }
         catch (Exception ex)
@@ -101,7 +110,10 @@ public class UsersController : ControllerBase
                 FullName = updated.FullName,
                 Role = updated.Role.ToString(),
                 IsActive = updated.IsActive,
-                CreatedAt = updated.CreatedAt
+                CreatedAt = updated.CreatedAt,
+                CustomPermissions = updated.CustomPermissions,
+                RequiresPasswordChange = updated.RequiresPasswordChange,
+                LastLoginAt = updated.LastLoginAt
             }, message = "User updated successfully" });
         }
         catch (KeyNotFoundException)
@@ -125,6 +137,42 @@ public class UsersController : ControllerBase
                 return NotFound(new { success = false, message = "User not found" });
             
             return Ok(new { success = true, message = "User deactivated successfully" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { success = false, message = ex.Message });
+        }
+    }
+
+    [HttpPut("{id}/permissions")]
+    [Authorize(Roles = "Admin,MD")]
+    public async Task<IActionResult> UpdatePermissions(Guid id, [FromBody] UpdatePermissionsRequest request)
+    {
+        try
+        {
+            var updated = await _userService.UpdatePermissionsAsync(id, request.Permissions);
+            if (!updated)
+                return NotFound(new { success = false, message = "User not found" });
+            
+            return Ok(new { success = true, message = "Permissions updated successfully" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { success = false, message = ex.Message });
+        }
+    }
+
+    [HttpPut("{id}/reset-password")]
+    [Authorize(Roles = "Admin,MD")]
+    public async Task<IActionResult> ResetPassword(Guid id, [FromBody] ResetPasswordRequest request)
+    {
+        try
+        {
+            var updated = await _userService.ResetPasswordAsync(id, request.NewPassword, request.RequiresPasswordChange);
+            if (!updated)
+                return NotFound(new { success = false, message = "User not found" });
+            
+            return Ok(new { success = true, message = "Password reset successfully" });
         }
         catch (Exception ex)
         {

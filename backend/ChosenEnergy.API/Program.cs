@@ -1,12 +1,14 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.FileProviders;
 using ChosenEnergy.API.Data;
 using ChosenEnergy.API.Services;
 using ChosenEnergy.API.Middleware;
 using ChosenEnergy.API.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
+Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
 
 // Add services
 builder.Services.AddControllers()
@@ -37,6 +39,9 @@ builder.Services.AddScoped<IInwardLoadService, InwardLoadService>();
 builder.Services.AddScoped<ISettingsService, SettingsService>();
 builder.Services.AddScoped<IDailyLogService, DailyLogService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IExpenseService, ExpenseService>();
+builder.Services.AddScoped<IInvoiceService, InvoiceService>();
+builder.Services.AddScoped<IDieselUsageService, DieselUsageService>();
 builder.Services.AddScoped<DbInitializer>();
 
 // ... (jwt settings)
@@ -116,7 +121,19 @@ app.UseMiddleware<JwtValidationMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseStaticFiles();
+
+var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "uploads");
+if (!Directory.Exists(uploadsPath))
+{
+    Directory.CreateDirectory(uploadsPath);
+}
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsPath),
+    RequestPath = "/uploads"
+});
+app.UseStaticFiles(); // Keep default for wwwroot if any
 app.MapControllers();
 
 app.Run();

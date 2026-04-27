@@ -18,10 +18,12 @@ import { MaintenancePage } from '@/app/pages/MaintenancePage';
 import { InvoicesPage } from '@/app/pages/InvoicesPage';
 import { ExpensesPage } from '@/app/pages/ExpensesPage';
 import { DriverOnboardingPage } from '@/app/pages/DriverOnboardingPage';
-import { SystemSettingsPage } from '@/app/pages/SystemSettingsPage';
 import { InwardLoadsPage } from '@/app/pages/InwardLoadsPage';
+import { SystemSettingsPage } from '@/app/pages/SystemSettingsPage';
+import { DieselUsagePage } from '@/app/pages/DieselUsagePage';
 import { SettingsPage } from '@/app/pages/SettingsPage';
 import { CommunicationCenterPage } from '@/app/pages/CommunicationCenterPage';
+import { UserManagementPage } from '@/app/pages/UserManagementPage';
 import { Layout } from '@/app/components/Layout';
 
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
@@ -67,8 +69,9 @@ function AppContent() {
         <Route path="/drivers" element={<DriversPage />} />
         <Route path="/customers" element={<CustomersPage />} />
         <Route path="/trucks" element={<TrucksPage />} />
-        <Route path="/depots" element={<DepotsPage />} />
         <Route path="/maintenance" element={<MaintenancePage />} />
+        <Route path="/diesel-usage" element={<DieselUsagePage />} />
+        <Route path="/depots" element={<DepotsPage />} />
         <Route path="/invoices" element={<InvoicesPage />} />
         <Route path="/expenses" element={<ExpensesPage />} />
         <Route path="/driver-onboarding" element={<DriverOnboardingPage />} />
@@ -76,6 +79,7 @@ function AppContent() {
         <Route path="/inward-loads" element={<InwardLoadsPage />} />
         <Route path="/global-settings" element={<SettingsPage />} />
         <Route path="/system" element={<SystemSettingsPage />} />
+        <Route path="/user-management" element={<UserManagementPage />} />
         <Route path="*" element={<DashboardPage />} />
       </Routes>
     </Layout>

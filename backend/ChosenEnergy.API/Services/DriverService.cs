@@ -14,6 +14,7 @@ public interface IDriverService
     Task<bool> AssignTruckAsync(Guid driverId, Guid truckId);
     Task<bool> UpdateStatusAsync(Guid driverId, string status);
     Task<Driver?> GetByUserIdAsync(Guid userId);
+    Task<bool> CreateUserAccountAsync(Guid driverId);
 }
 
 public class DriverService : IDriverService
@@ -50,9 +51,13 @@ public class DriverService : IDriverService
                 d.created_at as CreatedAt,
                 d.updated_at as UpdatedAt,
                 t.registration_number as TruckRegistration,
-                t.truck_type as TruckType
+                t.truck_type as TruckType,
+                u.is_active as IsUserActive,
+                COALESCE(u.email, 'N/A') as AppEmail,
+                COALESCE(u.username, u.email, 'N/A') as AppUsername
             FROM drivers d
             LEFT JOIN trucks t ON d.assigned_truck_id = t.id
+            LEFT JOIN users u ON d.user_id = u.id
             ORDER BY d.full_name";
         
         return await connection.QueryAsync<Driver>(sql);
@@ -81,9 +86,13 @@ public class DriverService : IDriverService
                 d.created_at as CreatedAt,
                 d.updated_at as UpdatedAt,
                 t.registration_number as TruckRegistration,
-                t.truck_type as TruckType
+                t.truck_type as TruckType,
+                u.is_active as IsUserActive,
+                COALESCE(u.email, 'N/A') as AppEmail,
+                COALESCE(u.username, u.email, 'N/A') as AppUsername
             FROM drivers d
             LEFT JOIN trucks t ON d.assigned_truck_id = t.id
+            LEFT JOIN users u ON d.user_id = u.id
             WHERE d.id = @Id";
         
         return await connection.QueryFirstOrDefaultAsync<Driver>(sql, new { Id = id });
@@ -333,5 +342,23 @@ public class DriverService : IDriverService
             WHERE d.user_id = @UserId";
         
         return await connection.QueryFirstOrDefaultAsync<Driver>(sql, new { UserId = userId });
+    }
+
+    public async Task<bool> CreateUserAccountAsync(Guid driverId)
+    {
+        var driver = await GetByIdAsync(driverId);
+        if (driver == null || driver.UserId != null) return false; // Already has an account or doesn't exist
+
+        var firstName = driver.FullName.Split(' ')[0].ToLower();
+        var email = $"{firstName}_{DateTime.Now.Ticks}@driver.chosen.com";
+        var username = $"{firstName}_{DateTime.Now.Ticks}"; // Username is just the firstname + random
+        var password = driver.Phone; // Use phone as default password
+        
+        var createdUser = await _authService.CreateUserAsync(email, username, password, driver.FullName, UserRole.Driver);
+
+        using var connection = _connectionFactory.CreateConnection();
+        var sql = "UPDATE drivers SET user_id = @UserId WHERE id = @Id";
+        var result = await connection.ExecuteAsync(sql, new { UserId = createdUser.Id, Id = driverId });
+        return result > 0;
     }
 }
