@@ -412,7 +412,7 @@ export function ExpensesPage() {
                                     value={formData.description}
                                     onChange={(e) => setFormData({...formData, description: e.target.value})}
                                     required
-                                    disabled={selectedExpense && selectedExpense.source !== 'Manual'}
+                                    disabled={!!selectedExpense && selectedExpense.source !== 'Manual'}
                                 />
                             </div>
                         </div>
