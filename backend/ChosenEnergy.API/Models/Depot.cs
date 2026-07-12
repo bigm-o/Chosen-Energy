@@ -10,5 +10,7 @@ public class Depot
     public string? ContactInfo { get; set; }
     public decimal CurrentStock { get; set; }
     public decimal PurchasePrice { get; set; }
+    // Feature 3: Outstanding balance from partial payments
+    public decimal TotalOutstandingBalance { get; set; }
     public DateTime CreatedAt { get; set; }
 }

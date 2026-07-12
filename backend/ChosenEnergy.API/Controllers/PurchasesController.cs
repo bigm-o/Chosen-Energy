@@ -44,6 +44,9 @@ public class PurchasesController : ControllerBase
             Quantity = p.Quantity,
             CostPerLitre = p.CostPerLitre,
             TotalCost = p.TotalCost,
+            AmountPaid = p.AmountPaid,
+            BalanceForward = p.BalanceForward,
+            DisbursedQuantity = p.DisbursedQuantity,
             PurchaseDate = p.PurchaseDate,
             ReceiptUrl = p.ReceiptUrl,
             Status = p.Status,
@@ -101,6 +104,9 @@ public class PurchasesController : ControllerBase
             Quantity = purchase.Quantity,
             CostPerLitre = purchase.CostPerLitre,
             TotalCost = purchase.TotalCost,
+            AmountPaid = purchase.AmountPaid,
+            BalanceForward = purchase.BalanceForward,
+            DisbursedQuantity = purchase.DisbursedQuantity,
             PurchaseDate = purchase.PurchaseDate,
             ReceiptUrl = purchase.ReceiptUrl,
             Status = purchase.Status,
@@ -130,6 +136,9 @@ public class PurchasesController : ControllerBase
             Quantity = request.Quantity,
             CostPerLitre = request.CostPerLitre,
             TotalCost = request.Quantity * request.CostPerLitre,
+            OriginalCost = request.Quantity * request.CostPerLitre,
+            AmountPaid = request.AmountPaid,
+            BalanceForward = (request.Quantity * request.CostPerLitre) - (request.AmountPaid ?? 0),
             PurchaseDate = request.PurchaseDate,
             ReceiptUrl = request.ReceiptUrl
         };
@@ -141,6 +150,9 @@ public class PurchasesController : ControllerBase
             Quantity = created.Quantity,
             CostPerLitre = created.CostPerLitre,
             TotalCost = created.TotalCost,
+            AmountPaid = created.AmountPaid,
+            BalanceForward = created.BalanceForward,
+            DisbursedQuantity = created.DisbursedQuantity,
             PurchaseDate = created.PurchaseDate,
             Status = created.Status,
             CreatedAt = created.CreatedAt,
@@ -162,6 +174,8 @@ public class PurchasesController : ControllerBase
             Quantity = request.Quantity,
             CostPerLitre = request.CostPerLitre,
             TotalCost = request.Quantity * request.CostPerLitre,
+            AmountPaid = request.AmountPaid,
+            BalanceForward = (request.Quantity * request.CostPerLitre) - (request.AmountPaid ?? 0),
             PurchaseDate = request.PurchaseDate
         };
 
@@ -172,6 +186,9 @@ public class PurchasesController : ControllerBase
             Quantity = updated.Quantity,
             CostPerLitre = updated.CostPerLitre,
             TotalCost = updated.TotalCost,
+            AmountPaid = updated.AmountPaid,
+            BalanceForward = updated.BalanceForward,
+            DisbursedQuantity = updated.DisbursedQuantity,
             PurchaseDate = updated.PurchaseDate,
             Status = updated.Status,
             HasPendingEdit = updated.HasPendingEdit
@@ -201,6 +218,9 @@ public class PurchasesController : ControllerBase
             Quantity = p.Quantity,
             CostPerLitre = p.CostPerLitre,
             TotalCost = p.TotalCost,
+            AmountPaid = p.AmountPaid,
+            BalanceForward = p.BalanceForward,
+            DisbursedQuantity = p.DisbursedQuantity,
             PurchaseDate = p.PurchaseDate,
             Status = p.Status,
             HasPendingEdit = p.HasPendingEdit,

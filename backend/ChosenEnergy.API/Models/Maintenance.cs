@@ -32,4 +32,7 @@ public class MaintenanceLog
     // Navigation props (for Dapper mapping)
     public string? TruckRegNumber { get; set; }
     public string? CreatedByName { get; set; }
+    // Feature 7: Vendor and invoice
+    public string? VendorName { get; set; }
+    public string? InvoiceUrl { get; set; }
 }

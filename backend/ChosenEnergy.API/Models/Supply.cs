@@ -29,6 +29,12 @@ public class Supply
     public Guid? MdApprovedBy { get; set; }
     public DateTime? MdApprovedAt { get; set; }
     
+    // Feature 2: Fraud flagging
+    public bool IsFlagged { get; set; }
+    public string? FlagReason { get; set; }
+    public Guid? FlaggedBy { get; set; }
+    public DateTime? FlaggedAt { get; set; }
+    
     public Guid? CreatedBy { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
@@ -42,4 +48,6 @@ public class Supply
     public string? EditedByName { get; set; }
     public string? AdminApprovedByName { get; set; }
     public string? MdApprovedByName { get; set; }
+    public string? FlaggedByName { get; set; }
 }
+

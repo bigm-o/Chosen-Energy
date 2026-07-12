@@ -9,9 +9,10 @@ interface LayoutProps {
   userRole: string;
   userName: string;
   onLogout: () => void;
+  customPermissions?: string[];
 }
 
-export function Layout({ children, currentPage, setCurrentPage, userRole, userName, onLogout }: LayoutProps) {
+export function Layout({ children, currentPage, setCurrentPage, userRole, userName, onLogout, customPermissions }: LayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -36,6 +37,7 @@ export function Layout({ children, currentPage, setCurrentPage, userRole, userNa
         setCollapsed={setSidebarCollapsed}
         mobileOpen={mobileMenuOpen}
         setMobileOpen={setMobileMenuOpen}
+        customPermissions={customPermissions}
       />
       <div className="flex-1 flex flex-col overflow-hidden w-full">
         <TopBar

@@ -31,6 +31,8 @@ public class MaintenanceService : IMaintenanceService
                 m.created_by as CreatedBy,
                 m.created_at as CreatedAt,
                 m.updated_at as UpdatedAt,
+                m.vendor_name as VendorName,
+                m.invoice_url as InvoiceUrl,
                 t.registration_number as TruckRegNumber,
                 u.full_name as CreatedByName
             FROM maintenance_logs m
@@ -57,6 +59,8 @@ public class MaintenanceService : IMaintenanceService
                 m.created_by as CreatedBy,
                 m.created_at as CreatedAt,
                 m.updated_at as UpdatedAt,
+                m.vendor_name as VendorName,
+                m.invoice_url as InvoiceUrl,
                 t.registration_number as TruckRegNumber,
                 u.full_name as CreatedByName
             FROM maintenance_logs m
@@ -77,8 +81,8 @@ public class MaintenanceService : IMaintenanceService
         try
         {
             var sql = @"
-                INSERT INTO maintenance_logs (truck_id, type, description, cost, scheduled_date, status, created_by)
-                VALUES (@TruckId, @Type, @Description, @Cost, @ScheduledDate, @Status, @CreatedBy)
+                INSERT INTO maintenance_logs (truck_id, type, description, cost, scheduled_date, status, created_by, vendor_name, invoice_url)
+                VALUES (@TruckId, @Type, @Description, @Cost, @ScheduledDate, @Status, @CreatedBy, @VendorName, @InvoiceUrl)
                 RETURNING id";
             
             var id = await connection.ExecuteScalarAsync<Guid>(sql, new 
@@ -89,13 +93,17 @@ public class MaintenanceService : IMaintenanceService
                 log.Cost,
                 log.ScheduledDate,
                 Status = log.Status.ToString(),
-                log.CreatedBy
+                log.CreatedBy,
+                log.VendorName,
+                log.InvoiceUrl
             }, transaction);
 
             // Fetch the full record with joins
             var created = await connection.QueryFirstAsync<MaintenanceLog>(@"
                 SELECT 
                     m.*, 
+                    m.vendor_name as VendorName,
+                    m.invoice_url as InvoiceUrl,
                     t.registration_number as TruckRegNumber,
                     u.full_name as CreatedByName
                 FROM maintenance_logs m

@@ -8,6 +8,12 @@ public class Purchase
     public decimal Quantity { get; set; }
     public decimal CostPerLitre { get; set; }
     public decimal TotalCost { get; set; }
+    // Feature 3: Payment tracking
+    public decimal? OriginalCost { get; set; }
+    public decimal? AmountPaid { get; set; }
+    public decimal BalanceForward { get; set; }
+    // Feature 5: Disbursement tracking
+    public decimal DisbursedQuantity { get; set; }
     public DateTime PurchaseDate { get; set; }
     public string? ReceiptUrl { get; set; }
     public string Status { get; set; } = "Pending";
@@ -29,3 +35,4 @@ public class Purchase
     public string? ApprovedByName { get; set; }
     public string? EditedByName { get; set; }
 }
+

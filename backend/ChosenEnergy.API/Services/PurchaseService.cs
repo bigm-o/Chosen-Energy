@@ -55,6 +55,10 @@ public class PurchaseService : IPurchaseService
                 p.edit_reason as EditReason,
                 p.original_values as OriginalValues,
                 p.has_pending_edit as HasPendingEdit,
+                p.original_cost as OriginalCost,
+                p.amount_paid as AmountPaid,
+                p.balance_forward as BalanceForward,
+                p.disbursed_quantity as DisbursedQuantity,
                 p.created_at as CreatedAt,
                 p.updated_at as UpdatedAt,
                 d.name as DepotName,
@@ -92,6 +96,10 @@ public class PurchaseService : IPurchaseService
                 p.edit_reason as EditReason,
                 p.original_values as OriginalValues,
                 p.has_pending_edit as HasPendingEdit,
+                p.original_cost as OriginalCost,
+                p.amount_paid as AmountPaid,
+                p.balance_forward as BalanceForward,
+                p.disbursed_quantity as DisbursedQuantity,
                 p.created_at as CreatedAt,
                 p.updated_at as UpdatedAt,
                 d.name as DepotName,
@@ -130,6 +138,10 @@ public class PurchaseService : IPurchaseService
                 p.edit_reason as EditReason,
                 p.original_values as OriginalValues,
                 p.has_pending_edit as HasPendingEdit,
+                p.original_cost as OriginalCost,
+                p.amount_paid as AmountPaid,
+                p.balance_forward as BalanceForward,
+                p.disbursed_quantity as DisbursedQuantity,
                 p.created_at as CreatedAt,
                 p.updated_at as UpdatedAt,
                 d.name as DepotName,
@@ -154,8 +166,8 @@ public class PurchaseService : IPurchaseService
         var status = userRole == "MD" ? "Approved" : "Pending";
         
         var sql = @"
-            INSERT INTO purchases (purchase_id, depot_id, quantity, cost_per_litre, total_cost, purchase_date, receipt_url, status, created_by, approved_by)
-            VALUES ('PUR-' || LPAD(nextval('purchase_id_seq')::TEXT, 3, '0'), @DepotId, @Quantity, @CostPerLitre, @TotalCost, @PurchaseDate, @ReceiptUrl, @Status::approval_status, @UserId, @ApprovedBy)
+            INSERT INTO purchases (purchase_id, depot_id, quantity, cost_per_litre, total_cost, original_cost, amount_paid, balance_forward, purchase_date, receipt_url, status, created_by, approved_by)
+            VALUES ('PUR-' || LPAD(nextval('purchase_id_seq')::TEXT, 3, '0'), @DepotId, @Quantity, @CostPerLitre, @TotalCost, @OriginalCost, @AmountPaid, @BalanceForward, @PurchaseDate, @ReceiptUrl, @Status::approval_status, @UserId, @ApprovedBy)
             RETURNING 
                 id as Id,
                 purchase_id as PurchaseId,
@@ -163,6 +175,10 @@ public class PurchaseService : IPurchaseService
                 quantity as Quantity,
                 cost_per_litre as CostPerLitre,
                 total_cost as TotalCost,
+                original_cost as OriginalCost,
+                amount_paid as AmountPaid,
+                balance_forward as BalanceForward,
+                disbursed_quantity as DisbursedQuantity,
                 purchase_date as PurchaseDate,
                 receipt_url as ReceiptUrl,
                 status::text as Status,
@@ -177,6 +193,9 @@ public class PurchaseService : IPurchaseService
             purchase.Quantity,
             purchase.CostPerLitre,
             purchase.TotalCost,
+            purchase.OriginalCost,
+            purchase.AmountPaid,
+            purchase.BalanceForward,
             purchase.PurchaseDate,
             purchase.ReceiptUrl,
             Status = status,
@@ -188,6 +207,7 @@ public class PurchaseService : IPurchaseService
         if (userRole == "MD" && purchase.DepotId.HasValue)
         {
             await UpdateDepotStock(connection, purchase.DepotId.Value, purchase.Quantity, true);
+            await UpdateDepotBalance(connection, purchase.DepotId.Value, purchase.BalanceForward, true);
         }
 
         if (status == "Pending")
@@ -223,7 +243,9 @@ public class PurchaseService : IPurchaseService
                     existing.Quantity,
                     existing.CostPerLitre,
                     existing.TotalCost,
-                    existing.PurchaseDate
+                    existing.PurchaseDate,
+                    existing.AmountPaid,
+                    existing.BalanceForward
                 });
 
                 var sqlEdit = @"
@@ -232,6 +254,9 @@ public class PurchaseService : IPurchaseService
                         quantity = @Quantity,
                         cost_per_litre = @CostPerLitre,
                         total_cost = @TotalCost,
+                        original_cost = @OriginalCost,
+                        amount_paid = @AmountPaid,
+                        balance_forward = @BalanceForward,
                         purchase_date = @PurchaseDate,
                         edit_reason = @EditReason,
                         edited_by = @UserId,
@@ -248,6 +273,9 @@ public class PurchaseService : IPurchaseService
                     purchase.Quantity,
                     purchase.CostPerLitre,
                     TotalCost = purchase.Quantity * purchase.CostPerLitre,
+                    OriginalCost = purchase.Quantity * purchase.CostPerLitre,
+                    AmountPaid = purchase.AmountPaid,
+                    BalanceForward = (purchase.Quantity * purchase.CostPerLitre) - (purchase.AmountPaid ?? 0),
                     purchase.PurchaseDate,
                     EditReason = editReason,
                     UserId = userId,
@@ -263,7 +291,9 @@ public class PurchaseService : IPurchaseService
             {
                 // Direct update (if still pending or if user is MD)
                 var oldQuantity = existing.Status == "Approved" ? existing.Quantity : 0;
+                var oldBalance = existing.Status == "Approved" ? existing.BalanceForward : 0;
                 var newQuantity = purchase.Quantity;
+                var newBalance = (purchase.Quantity * purchase.CostPerLitre) - (purchase.AmountPaid ?? 0);
 
                 var sqlDirect = @"
                     UPDATE purchases 
@@ -271,6 +301,9 @@ public class PurchaseService : IPurchaseService
                         quantity = @Quantity,
                         cost_per_litre = @CostPerLitre,
                         total_cost = @TotalCost,
+                        original_cost = @OriginalCost,
+                        amount_paid = @AmountPaid,
+                        balance_forward = @BalanceForward,
                         purchase_date = @PurchaseDate,
                         updated_at = CURRENT_TIMESTAMP
                     WHERE id = @Id
@@ -283,6 +316,9 @@ public class PurchaseService : IPurchaseService
                     purchase.Quantity,
                     purchase.CostPerLitre,
                     TotalCost = purchase.Quantity * purchase.CostPerLitre,
+                    OriginalCost = purchase.Quantity * purchase.CostPerLitre,
+                    AmountPaid = purchase.AmountPaid,
+                    BalanceForward = newBalance,
                     purchase.PurchaseDate
                 }, transaction);
 
@@ -290,9 +326,15 @@ public class PurchaseService : IPurchaseService
                 if (existing.Status == "Approved" && purchase.DepotId.HasValue)
                 {
                     var diff = newQuantity - oldQuantity;
+                    var balanceDiff = newBalance - oldBalance;
+                    
                     if (diff != 0)
                     {
                         await UpdateDepotStock(connection, purchase.DepotId.Value, diff, true, transaction);
+                    }
+                    if (balanceDiff != 0)
+                    {
+                        await UpdateDepotBalance(connection, purchase.DepotId.Value, balanceDiff, true, transaction);
                     }
                 }
 
@@ -322,6 +364,7 @@ public class PurchaseService : IPurchaseService
             if (existing.Status == "Approved" && existing.DepotId.HasValue)
             {
                 await UpdateDepotStock(connection, existing.DepotId.Value, existing.Quantity, false, transaction);
+                await UpdateDepotBalance(connection, existing.DepotId.Value, existing.BalanceForward, false, transaction);
             }
 
             await connection.ExecuteAsync("DELETE FROM purchases WHERE id = @Id", new { Id = id }, transaction);
@@ -360,6 +403,7 @@ public class PurchaseService : IPurchaseService
             if (existing.DepotId.HasValue)
             {
                 await UpdateDepotStock(connection, existing.DepotId.Value, existing.Quantity, true, transaction);
+                await UpdateDepotBalance(connection, existing.DepotId.Value, existing.BalanceForward, true, transaction);
             }
 
             await _auditService.LogAsync(
@@ -442,6 +486,10 @@ public class PurchaseService : IPurchaseService
 
             var original = JsonSerializer.Deserialize<JsonElement>(existing.OriginalValues);
             decimal oldQuantity = original.GetProperty("Quantity").GetDecimal();
+            decimal oldBalance = 0;
+            if (original.TryGetProperty("BalanceForward", out JsonElement balEl))
+                oldBalance = balEl.GetDecimal();
+                
             Guid? oldDepotId = null;
             
             if (original.TryGetProperty("DepotId", out JsonElement depotEl) && depotEl.ValueKind != JsonValueKind.Null)
@@ -463,10 +511,12 @@ public class PurchaseService : IPurchaseService
             if (oldDepotId.HasValue)
             {
                 await UpdateDepotStock(connection, oldDepotId.Value, oldQuantity, false, transaction);
+                await UpdateDepotBalance(connection, oldDepotId.Value, oldBalance, false, transaction);
             }
             if (updated.DepotId.HasValue)
             {
                 await UpdateDepotStock(connection, updated.DepotId.Value, updated.Quantity, true, transaction);
+                await UpdateDepotBalance(connection, updated.DepotId.Value, updated.BalanceForward, true, transaction);
             }
 
             transaction.Commit();
@@ -564,8 +614,19 @@ public class PurchaseService : IPurchaseService
 
     private async Task UpdateDepotStock(System.Data.IDbConnection connection, Guid depotId, decimal quantity, bool isAddition, System.Data.IDbTransaction? transaction = null)
     {
-        var operation = isAddition ? "+" : "-";
-        var sql = $"UPDATE depots SET current_stock = current_stock {operation} @Quantity WHERE id = @DepotId";
-        await connection.ExecuteAsync(sql, new { Quantity = Math.Abs(quantity), DepotId = depotId }, transaction);
+        var sql = isAddition 
+            ? "UPDATE depots SET current_stock = current_stock + @Quantity WHERE id = @Id" 
+            : "UPDATE depots SET current_stock = current_stock - @Quantity WHERE id = @Id";
+        
+        await connection.ExecuteAsync(sql, new { Id = depotId, Quantity = Math.Abs(quantity) }, transaction);
+    }
+
+    private async Task UpdateDepotBalance(System.Data.IDbConnection connection, Guid depotId, decimal amount, bool isAddition, System.Data.IDbTransaction? transaction = null)
+    {
+        var sql = isAddition 
+            ? "UPDATE depots SET total_outstanding_balance = total_outstanding_balance + @Amount WHERE id = @Id"
+            : "UPDATE depots SET total_outstanding_balance = total_outstanding_balance - @Amount WHERE id = @Id";
+        
+        await connection.ExecuteAsync(sql, new { Id = depotId, Amount = amount }, transaction);
     }
 }

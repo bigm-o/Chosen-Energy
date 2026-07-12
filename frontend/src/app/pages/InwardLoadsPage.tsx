@@ -30,6 +30,8 @@ interface Depot {
 }
 
 export function InwardLoadsPage() {
+    const { user } = useAuth();
+    const canApprove = user?.role === 'MD' || user?.customPermissions?.includes('approve_inward_loads');
     const [loads, setLoads] = useState<InwardLoad[]>([]);
     const [trucks, setTrucks] = useState<Truck[]>([]);
     const [depots, setDepots] = useState<Depot[]>([]);
@@ -247,7 +249,7 @@ export function InwardLoadsPage() {
                                             <p className="text-[10px] text-gray-400 font-bold">{new Date(l.loadDate).toLocaleDateString()}</p>
                                         </div>
                                     </div>
-                                    {l.status === 'Pending' && (
+                                    {l.status === 'Pending' && canApprove && (
                                         <button 
                                             onClick={() => handleApprove(l.id)} 
                                             disabled={isSubmitting}
@@ -296,7 +298,7 @@ export function InwardLoadsPage() {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4">
-                                            {l.status === 'Pending' && (
+                                            {l.status === 'Pending' && canApprove && (
                                                 <button 
                                                     onClick={() => handleApprove(l.id)} 
                                                     disabled={isSubmitting}

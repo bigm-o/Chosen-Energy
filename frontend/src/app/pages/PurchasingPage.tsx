@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Plus, Filter, Download, Eye, CheckCircle, XCircle, Edit2, Calendar, AlertCircle, FileText, Clock, ArrowRight, Loader2 } from 'lucide-react';
+import { Plus, Filter, Download, Eye, CheckCircle, XCircle, Edit2, Calendar, AlertCircle, FileText, Clock, ArrowRight, Loader2, TrendingUp } from 'lucide-react';
 import { apiRequest } from '@/utils/api';
 import { Modal } from '@/app/components/Modal';
 
@@ -23,15 +23,21 @@ interface Purchase {
   rejectionReason?: string;
   editReason?: string;
   createdAt?: string;
+  originalCost?: number;
+  amountPaid?: number;
+  balanceForward?: number;
+  disbursedQuantity?: number;
 }
 
 interface Depot {
   id: string;
   name: string;
+  totalOutstandingBalance?: number;
 }
 
 export function PurchasingPage() {
   const { user } = useAuth();
+  const canApprove = user?.role === 'MD' || user?.customPermissions?.includes('approve_purchasing');
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [filteredPurchases, setFilteredPurchases] = useState<Purchase[]>([]);
   const [depots, setDepots] = useState<Depot[]>([]);
@@ -67,6 +73,7 @@ export function PurchasingPage() {
     depotId: '',
     quantity: '',
     costPerLitre: '',
+    amountPaid: '',
     purchaseDate: new Date().toISOString().split('T')[0],
     editReason: '',
     receiptFile: null as File | null
@@ -115,12 +122,16 @@ export function PurchasingPage() {
     setIsSubmitting(true);
     setError(null);
     try {
-      const payload = {
+      const payload: any = {
         depotId: formData.depotId,
         quantity: parseFloat(formData.quantity),
         costPerLitre: parseFloat(formData.costPerLitre),
         purchaseDate: formData.purchaseDate
       };
+      
+      if (formData.amountPaid) {
+          payload.amountPaid = parseFloat(formData.amountPaid);
+      }
 
       const response = await apiRequest('/api/purchases', {
         method: 'POST',
@@ -129,9 +140,24 @@ export function PurchasingPage() {
       });
 
       if (response.ok) {
-        setSuccess(user?.role === 'MD' ? 'Purchase created and approved automatically' : 'Purchase created successfully. Awaiting MD approval.');
+        const createdPurchase = await response.json();
+        
+        // Handle receipt upload if a file was selected
+        if (formData.receiptFile) {
+            const formDataUpload = new FormData();
+            formDataUpload.append('file', formData.receiptFile);
+            
+            await apiRequest(`/api/purchases/${createdPurchase.data.id}/receipt`, {
+                method: 'POST',
+                body: formDataUpload
+                // Note: Don't set Content-Type header when sending FormData, 
+                // the browser will automatically set it with the correct boundary
+            });
+        }
+
+        setSuccess(canApprove ? 'Purchase created and approved automatically' : 'Purchase created successfully. Awaiting MD approval.');
         setShowAddModal(false);
-        setFormData({ depotId: '', quantity: '', costPerLitre: '', purchaseDate: new Date().toISOString().split('T')[0], editReason: '', receiptFile: null });
+        setFormData({ depotId: '', quantity: '', costPerLitre: '', amountPaid: '', purchaseDate: new Date().toISOString().split('T')[0], editReason: '', receiptFile: null });
         fetchPurchases();
       } else {
         const err = await response.json();
@@ -157,13 +183,17 @@ export function PurchasingPage() {
     setIsSubmitting(true);
     setError(null);
     try {
-      const payload = {
+      const payload: any = {
         depotId: formData.depotId,
         quantity: parseFloat(formData.quantity),
         costPerLitre: parseFloat(formData.costPerLitre),
         purchaseDate: formData.purchaseDate,
         editReason: formData.editReason
       };
+
+      if (formData.amountPaid) {
+          payload.amountPaid = parseFloat(formData.amountPaid);
+      }
 
       const response = await apiRequest(`/api/purchases/${selectedPurchase.id}`, {
         method: 'PUT',
@@ -172,7 +202,7 @@ export function PurchasingPage() {
       });
 
       if (response.ok) {
-        setSuccess(user?.role === 'MD' ? 'Purchase updated and approved' : 'Purchase updated. Awaiting MD approval.');
+        setSuccess(canApprove ? 'Purchase updated and approved' : 'Purchase updated. Awaiting MD approval.');
         setShowEditModal(false);
         setSelectedPurchase(null);
         fetchPurchases();
@@ -323,6 +353,7 @@ export function PurchasingPage() {
       depotId: purchase.depotId || '',
       quantity: purchase.quantity.toString(),
       costPerLitre: purchase.costPerLitre.toString(),
+      amountPaid: purchase.amountPaid?.toString() || '',
       purchaseDate: purchase.purchaseDate.split('T')[0],
       editReason: '',
       receiptFile: null
@@ -374,7 +405,11 @@ export function PurchasingPage() {
           <p className="text-gray-600 dark:text-gray-400 mt-1">Manage all diesel purchase records and track depot purchases</p>
         </div>
         <button
-          onClick={() => setShowAddModal(true)}
+          onClick={() => {
+              fetchDepots();
+              fetchPurchases();
+              setShowAddModal(true);
+          }}
           className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
         >
           <Plus className="w-4 h-4" />
@@ -470,20 +505,27 @@ export function PurchasingPage() {
               <p className="text-xs text-gray-500 dark:text-gray-400">{new Date(purchase.purchaseDate).toLocaleDateString('en-GB')}</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 dark:text-gray-400 mb-3 bg-gray-50 dark:bg-gray-900/50 p-2 rounded-lg">
+              <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 dark:text-gray-400 mb-3 bg-gray-50 dark:bg-gray-900/50 p-2 rounded-lg">
               <div>
-                <p className="font-semibold text-gray-400 dark:text-gray-500 uppercase text-[10px]">Quantity</p>
-                <p className="font-medium text-gray-900 dark:text-gray-100">{purchase.quantity.toLocaleString()} L</p>
+                <p className="font-semibold text-gray-400 dark:text-gray-500 uppercase text-[10px]">Volume / Disbursed</p>
+                <p className="font-medium text-gray-900 dark:text-gray-100">{purchase.quantity.toLocaleString()} L <span className="text-[10px] text-gray-500">({(purchase.disbursedQuantity || 0).toLocaleString()} L)</span></p>
               </div>
               <div>
-                <p className="font-semibold text-gray-400 dark:text-gray-500 uppercase text-[10px]">Total Cost</p>
-                <p className="font-medium text-gray-900 dark:text-gray-100">₦{purchase.totalCost.toLocaleString()}</p>
+                <p className="font-semibold text-gray-400 dark:text-gray-500 uppercase text-[10px]">Total Cost / Balance</p>
+                <p className="font-medium text-gray-900 dark:text-gray-100">
+                    ₦{purchase.totalCost.toLocaleString()}
+                    {purchase.balanceForward && purchase.balanceForward > 0 ? (
+                        <span className="block text-[10px] text-red-500 font-bold mt-0.5">Bal: ₦{purchase.balanceForward.toLocaleString()}</span>
+                    ) : purchase.balanceForward && purchase.balanceForward < 0 ? (
+                        <span className="block text-[10px] text-green-500 font-bold mt-0.5">Exc: ₦{Math.abs(purchase.balanceForward).toLocaleString()}</span>
+                    ) : null}
+                </p>
               </div>
             </div>
 
             <div className="flex justify-end gap-2 pt-2 border-t border-gray-100 dark:border-gray-800">
               {/* Approve/Reject Edit for Pending Edits */}
-              {purchase.hasPendingEdit && user?.role === 'MD' ? (
+              {purchase.hasPendingEdit && canApprove ? (
                 <>
                   <button
                     onClick={() => openApproveModal(purchase, 'approve-edit')}
@@ -498,7 +540,7 @@ export function PurchasingPage() {
                     <XCircle className="w-4 h-4" />
                   </button>
                 </>
-              ) : purchase.status === 'Pending' && user?.role === 'MD' ? (
+              ) : purchase.status === 'Pending' && canApprove ? (
                 <>
                   <button
                     onClick={() => openApproveModal(purchase, 'approve')}
@@ -541,9 +583,9 @@ export function PurchasingPage() {
               <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700 dark:text-gray-200">Purchase ID</th>
               <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700 dark:text-gray-200">Date</th>
               <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700 dark:text-gray-200">Depot Name</th>
-              <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700 dark:text-gray-200">Quantity (L)</th>
+              <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700 dark:text-gray-200">Volume <span className="text-[10px] text-gray-500">(Disbursed)</span></th>
               <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700 dark:text-gray-200">Cost/Litre</th>
-              <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700 dark:text-gray-200">Total Cost</th>
+              <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700 dark:text-gray-200">Total Cost <span className="text-[10px] text-gray-500">(Balance)</span></th>
               <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700 dark:text-gray-200">Status</th>
               <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700 dark:text-gray-200">Actions</th>
             </tr>
@@ -552,15 +594,27 @@ export function PurchasingPage() {
             {filteredPurchases.map((purchase, index) => (
               <tr key={purchase.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 transition-colors">
                 <td className="py-4 px-6">
-                  <span className="text-sm font-medium text-blue-600 dark:text-blue-400">{purchase.purchaseId || 'PUR-000'}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-blue-600 dark:text-blue-400">{purchase.purchaseId || 'PUR-000'}</span>
+                    {purchase.receiptUrl && <FileText className="w-3 h-3 text-gray-400" title="Receipt attached" />}
+                  </div>
                 </td>
                 <td className="py-4 px-6 text-sm text-gray-900 dark:text-gray-100">
                   {new Date(purchase.purchaseDate).toLocaleDateString('en-GB')}
                 </td>
                 <td className="py-4 px-6 text-sm text-gray-900 dark:text-gray-100">{purchase.depotName}</td>
-                <td className="py-4 px-6 text-sm text-gray-900 dark:text-gray-100">{purchase.quantity.toLocaleString()}</td>
+                <td className="py-4 px-6 text-sm text-gray-900 dark:text-gray-100">
+                    {purchase.quantity.toLocaleString()} <span className="text-xs text-gray-400">({(purchase.disbursedQuantity || 0).toLocaleString()})</span>
+                </td>
                 <td className="py-4 px-6 text-sm text-gray-900 dark:text-gray-100">₦{purchase.costPerLitre.toLocaleString()}</td>
-                <td className="py-4 px-6 text-sm font-semibold text-gray-900 dark:text-gray-100">₦{purchase.totalCost.toLocaleString()}</td>
+                <td className="py-4 px-6 text-sm font-semibold text-gray-900 dark:text-gray-100">
+                    ₦{purchase.totalCost.toLocaleString()}
+                    {purchase.balanceForward && purchase.balanceForward > 0 ? (
+                        <span className="block text-xs text-red-500 font-bold">Bal: ₦{purchase.balanceForward.toLocaleString()}</span>
+                    ) : purchase.balanceForward && purchase.balanceForward < 0 ? (
+                        <span className="block text-xs text-green-500 font-bold">Exc: ₦{Math.abs(purchase.balanceForward).toLocaleString()}</span>
+                    ) : null}
+                </td>
                 <td className="py-4 px-6">
                   <div className="flex flex-col gap-1">
                     <span className={`px-3 py-1 rounded-full text-xs font-medium inline-block w-fit ${purchase.status === 'Approved' ? 'bg-gray-900 text-white' :
@@ -580,7 +634,7 @@ export function PurchasingPage() {
                 <td className="py-4 px-6">
                   <div className="flex items-center gap-2">
                     {/* Approve/Reject Edit for Pending Edits - HIGHEST PRIORITY */}
-                    {purchase.hasPendingEdit && user?.role === 'MD' ? (
+                    {purchase.hasPendingEdit && canApprove ? (
                       <>
                         <button
                           onClick={() => openApproveModal(purchase, 'approve-edit')}
@@ -597,7 +651,7 @@ export function PurchasingPage() {
                           <XCircle className="w-4 h-4" />
                         </button>
                       </>
-                    ) : purchase.status === 'Pending' && user?.role === 'MD' ? (
+                    ) : purchase.status === 'Pending' && canApprove ? (
                       /* Approve/Reject for Pending Purchases - Only if no pending edit */
                       <>
                         <button
@@ -657,6 +711,88 @@ export function PurchasingPage() {
                 <option value="">Select Depot</option>
                 {depots.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
+              {formData.depotId && (() => {
+                  const depot = depots.find(d => d.id === formData.depotId);
+                  if (depot) {
+                      // Calculate real-time balance from history for accuracy
+                      const allApproved = filteredPurchases
+                          .filter(p => p.depotId === formData.depotId && p.status === 'Approved')
+                          .sort((a, b) => new Date(a.purchaseDate).getTime() - new Date(b.purchaseDate).getTime());
+                      
+                      let currentRunning = 0;
+                      const historyWithRunning = allApproved.map(p => {
+                          currentRunning += (p.balanceForward || 0);
+                          return { ...p, cumulativeBalance: currentRunning };
+                      });
+
+                      const historyToDisplay = historyWithRunning.reverse().slice(0, 3);
+                      const finalCalculatedBalance = currentRunning;
+
+                      return (
+                          <div className="space-y-3 mt-2">
+                              <div className={`p-3 rounded-lg border flex items-center justify-between ${
+                                  finalCalculatedBalance > 0 
+                                      ? 'bg-red-50 border-red-100 text-red-700' 
+                                      : finalCalculatedBalance < 0
+                                          ? 'bg-green-50 border-green-100 text-green-700'
+                                          : 'bg-blue-50 border-blue-100 text-blue-700 shadow-sm'
+                              }`}>
+                                  <div className="flex items-center gap-2">
+                                      <AlertCircle className="w-4 h-4" />
+                                      <span className="text-[10px] font-black uppercase tracking-tight">
+                                          {finalCalculatedBalance > 0 ? 'Current Rollover Debt' : finalCalculatedBalance < 0 ? 'Current Excess Credit' : 'Account Balanced (No Rollover)'}
+                                      </span>
+                                  </div>
+                                  <span className="text-sm font-black">₦{Math.abs(finalCalculatedBalance).toLocaleString()}</span>
+                              </div>
+
+                              {historyToDisplay.length > 0 && (
+                                  <div className="bg-white dark:bg-gray-900/40 rounded-xl border border-gray-100 dark:border-gray-800 p-3 shadow-inner">
+                                      <span className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest block mb-2 border-b pb-1">Recent Balancing History</span>
+                                      <div className="space-y-2">
+                                          {historyToDisplay.map(p => (
+                                              <div key={p.id} className="flex justify-between items-center text-[10px] py-1">
+                                                  <div className="flex flex-col gap-0.5">
+                                                      <div className="flex items-center gap-2">
+                                                          <Calendar className="w-3 h-3 text-gray-300" />
+                                                          <span className="text-gray-500 font-medium">{new Date(p.purchaseDate).toLocaleDateString('en-GB')}</span>
+                                                      </div>
+                                                      <div className="flex gap-3 text-[9px] text-gray-400">
+                                                          <span>Cost: ₦{p.totalCost.toLocaleString()}</span>
+                                                          <span>Paid: ₦{(p.amountPaid ?? p.totalCost).toLocaleString()}</span>
+                                                      </div>
+                                                  </div>
+                                                  <span className={`font-bold ${p.balanceForward > 0 ? 'text-red-500' : p.balanceForward < 0 ? 'text-green-500' : 'text-gray-400'}`}>
+                                                      {p.balanceForward > 0 ? 'Debt: +' : p.balanceForward < 0 ? 'Credit: -' : ''}
+                                                      ₦{Math.abs(p.balanceForward || 0).toLocaleString()}
+                                                  </span>
+                                              </div>
+                                          ))}
+                                          
+                                          <div className="border-t border-gray-100 dark:border-gray-800 mt-2 pt-2 flex justify-between items-center">
+                                              <span className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Full Account Standing</span>
+                                              <div className={`flex items-center gap-1.5 px-2 py-1 rounded border ${
+                                                  finalCalculatedBalance > 0 
+                                                      ? 'bg-red-50/50 border-red-100 text-red-700' 
+                                                      : finalCalculatedBalance < 0 
+                                                          ? 'bg-green-50/50 border-green-100 text-green-700' 
+                                                          : 'bg-blue-50/50 border-blue-100 text-blue-700'
+                                              }`}>
+                                                  <TrendingUp className="w-3 h-3" />
+                                                  <span className="text-xs font-black">
+                                                      {finalCalculatedBalance > 0 ? 'Owed: ' : finalCalculatedBalance < 0 ? 'Credit: ' : ''}
+                                                      ₦{Math.abs(finalCalculatedBalance).toLocaleString()}
+                                                  </span>
+                                              </div>
+                                          </div>
+                                      </div>
+                                  </div>
+                              )}
+                          </div>
+                      );
+                  }
+                  return null;
+              })()}
             </div>
 
             <div>
@@ -671,7 +807,7 @@ export function PurchasingPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Quantity (Litres)</label>
               <input
@@ -695,13 +831,95 @@ export function PurchasingPage() {
                 required
               />
             </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Amount Paid (₦)</label>
+              <input
+                type="number"
+                value={formData.amountPaid}
+                onChange={e => setFormData({ ...formData, amountPaid: e.target.value })}
+                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400"
+                placeholder={`Optional (Total: ₦${totalCost})`}
+              />
+            </div>
           </div>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Total Cost:</span>
-              <span className="text-xl font-bold text-blue-600 dark:text-blue-400">₦{totalCost}</span>
+          <div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-xl p-5 space-y-4">
+            <div className="flex justify-between items-center pb-3 border-b border-gray-200 dark:border-gray-700">
+                <span className="text-sm font-medium text-gray-500 uppercase tracking-widest text-[10px]">Current Purchase Cost</span>
+                <span className="text-lg font-bold text-gray-900 dark:text-white">₦{totalCost.toLocaleString()}</span>
             </div>
+
+            {formData.amountPaid && (
+                (() => {
+                    const currentBalance = parseFloat(formData.costPerLitre) * parseFloat(formData.quantity) - parseFloat(formData.amountPaid);
+                    const depot = depots.find(d => d.id === formData.depotId);
+                    const rolloverBalance = depot?.totalOutstandingBalance || 0;
+                    const finalNetBalance = rolloverBalance + currentBalance;
+
+                    return (
+                        <>
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div className="space-y-1">
+                                    <span className="text-[10px] font-medium text-gray-400 uppercase tracking-widest block">This Transaction</span>
+                                    <div className={`flex items-center gap-1 font-bold ${currentBalance > 0 ? 'text-red-600' : currentBalance < 0 ? 'text-green-600' : 'text-gray-900'}`}>
+                                        {currentBalance > 0 ? <TrendingUp className="w-3 h-3" /> : currentBalance < 0 ? <TrendingUp className="w-3 h-3 rotate-180" /> : null}
+                                        ₦{Math.abs(currentBalance).toLocaleString()}
+                                        <span className="text-[9px] font-medium opacity-70 ml-1">({currentBalance > 0 ? 'New Debt' : currentBalance < 0 ? 'New Credit' : 'Balanced'})</span>
+                                    </div>
+                                </div>
+                                <div className="space-y-1 text-right">
+                                    <span className="text-[10px] font-medium text-gray-400 uppercase tracking-widest block">Rollover Balance</span>
+                                    <div className={`font-bold ${rolloverBalance > 0 ? 'text-red-600' : rolloverBalance < 0 ? 'text-green-600' : 'text-gray-900'}`}>
+                                        ₦{Math.abs(rolloverBalance).toLocaleString()}
+                                        <span className="text-[9px] font-medium opacity-70 ml-1">({rolloverBalance > 0 ? 'Owed' : rolloverBalance < 0 ? 'Credit' : 'None'})</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className={`mt-4 p-4 rounded-xl border-2 flex justify-between items-center ${
+                                finalNetBalance > 0 
+                                    ? 'bg-red-50 border-red-100 dark:bg-red-950/20 dark:border-red-900/30' 
+                                    : finalNetBalance < 0
+                                        ? 'bg-green-50 border-green-100 dark:bg-green-950/20 dark:border-green-900/30'
+                                        : 'bg-blue-50 border-blue-100 dark:bg-blue-950/20 dark:border-blue-900/30'
+                            }`}>
+                                <div className="flex flex-col">
+                                    <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${
+                                        finalNetBalance > 0 ? 'text-red-700' : finalNetBalance < 0 ? 'text-green-700' : 'text-blue-700'
+                                    }`}>
+                                        Projected Depot Standing
+                                    </span>
+                                    <span className="text-xs text-gray-500 font-medium">After MD Approval</span>
+                                </div>
+                                <div className="text-right">
+                                    <span className={`text-2xl font-black ${
+                                        finalNetBalance > 0 ? 'text-red-600' : finalNetBalance < 0 ? 'text-green-600' : 'text-blue-600'
+                                    }`}>
+                                        ₦{Math.abs(finalNetBalance).toLocaleString()}
+                                    </span>
+                                    <div className={`text-[10px] font-bold uppercase ${
+                                        finalNetBalance > 0 ? 'text-red-700' : finalNetBalance < 0 ? 'text-green-700' : 'text-blue-700'
+                                    }`}>
+                                        {finalNetBalance > 0 ? 'Net Debt to Depot' : finalNetBalance < 0 ? 'Net Excess Credit' : 'Account Balanced'}
+                                    </div>
+                                </div>
+                            </div>
+                        </>
+                    );
+                })()
+            )}
+          </div>
+
+          <div>
+             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Purchase Invoice / Receipt (Optional)</label>
+             <input
+                type="file"
+                accept="image/*,application/pdf"
+                onChange={e => setFormData({ ...formData, receiptFile: e.target.files?.[0] || null })}
+                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white"
+             />
+             {formData.receiptFile && <p className="text-sm text-gray-500 mt-1">Selected file: {formData.receiptFile.name}</p>}
           </div>
 
           {user?.role === 'Admin' && (
@@ -766,7 +984,7 @@ export function PurchasingPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Quantity (Litres)</label>
               <input
@@ -788,13 +1006,58 @@ export function PurchasingPage() {
                 required
               />
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Amount Paid (₦)</label>
+              <input
+                type="number"
+                value={formData.amountPaid}
+                onChange={e => setFormData({ ...formData, amountPaid: e.target.value })}
+                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-gray-100"
+              />
+            </div>
           </div>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex justify-between items-center">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex justify-between items-center">
+            <div className="flex flex-col">
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Total Cost:</span>
               <span className="text-xl font-bold text-blue-600 dark:text-blue-400">₦{totalCost}</span>
             </div>
+            {formData.amountPaid && (
+                (() => {
+                    const balance = parseFloat(formData.costPerLitre) * parseFloat(formData.quantity) - parseFloat(formData.amountPaid);
+                    const depot = depots.find(d => d.id === formData.depotId);
+                    
+                    // For editing, we need to factor in that the current purchase's existing balance is already in the totalOutstandingBalance
+                    const existingBalanceForward = selectedPurchase?.balanceForward || 0;
+                    const depotBalanceWithoutThisPurchase = (depot?.totalOutstandingBalance || 0) - (selectedPurchase?.status === 'Approved' ? existingBalanceForward : 0);
+                    const newTotalBalance = depotBalanceWithoutThisPurchase + balance;
+
+                    return (
+                        <div className="flex flex-col text-right gap-1">
+                          {balance > 0 ? (
+                            <div>
+                                <span className="text-[10px] font-medium text-red-700 block uppercase">Adjusted Debt</span>
+                                <span className="text-lg font-bold text-red-600">₦{balance.toLocaleString()}</span>
+                            </div>
+                          ) : balance < 0 ? (
+                            <div>
+                                <span className="text-[10px] font-medium text-green-700 block uppercase">Adjusted Credit</span>
+                                <span className="text-lg font-bold text-green-600">₦{Math.abs(balance).toLocaleString()}</span>
+                            </div>
+                          ) : null}
+
+                          <div className="pt-1 border-t border-blue-100 mt-1">
+                            <span className="text-[10px] font-medium text-gray-500 block uppercase">Projected Net Balance</span>
+                            <span className={`text-sm font-bold ${newTotalBalance > 0 ? 'text-red-700' : newTotalBalance < 0 ? 'text-green-700' : 'text-gray-700'}`}>
+                                {newTotalBalance > 0 ? 'Debt: ' : newTotalBalance < 0 ? 'Credit: ' : ''}
+                                ₦{Math.abs(newTotalBalance).toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                    );
+                })()
+            )}
           </div>
 
           {selectedPurchase?.status === 'Approved' && (
@@ -893,6 +1156,29 @@ export function PurchasingPage() {
               </div>
             </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+              <div>
+                <label className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-widest text-[10px]">Amount Paid</label>
+                <p className="mt-1 text-green-700 dark:text-green-500 font-bold">₦{(selectedPurchase.amountPaid ?? selectedPurchase.totalCost).toLocaleString()}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-widest text-[10px]">
+                    {(selectedPurchase.balanceForward && selectedPurchase.balanceForward < 0) ? 'Excess Payment' : 'Balance Forward'}
+                </label>
+                <p className={`mt-1 font-bold ${
+                    selectedPurchase.balanceForward && selectedPurchase.balanceForward > 0 ? 'text-red-600 dark:text-red-500' : 
+                    selectedPurchase.balanceForward && selectedPurchase.balanceForward < 0 ? 'text-green-600 dark:text-green-500' :
+                    'text-gray-900 dark:text-gray-100'
+                }`}>
+                    ₦{Math.abs(selectedPurchase.balanceForward ?? 0).toLocaleString()}
+                </p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-widest text-[10px]">Disbursed Volume</label>
+                <p className="mt-1 text-blue-700 dark:text-blue-500 font-bold">{(selectedPurchase.disbursedQuantity ?? 0).toLocaleString()} L</p>
+              </div>
+            </div>
+
             <div className="border-t pt-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -921,6 +1207,45 @@ export function PurchasingPage() {
                   Rejection Reason
                 </label>
                 <p className="mt-2 text-red-900">{selectedPurchase.rejectionReason}</p>
+              </div>
+            )}
+
+            {selectedPurchase.receiptUrl && (
+              <div className="pt-4 border-t">
+                <label className="text-sm font-medium text-gray-500 dark:text-gray-400 block mb-2 uppercase tracking-widest text-[10px]">Invoice / Receipt</label>
+                {(() => {
+                    const url = `${import.meta.env.VITE_API_URL || ''}${selectedPurchase.receiptUrl}`;
+                    const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(selectedPurchase.receiptUrl);
+                    
+                    if (isImage) {
+                        return (
+                            <div className="mt-2 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden bg-gray-50 dark:bg-gray-900/50">
+                                <img 
+                                    src={url} 
+                                    alt="Purchase Invoice" 
+                                    className="max-w-full h-auto max-h-[400px] mx-auto cursor-pointer hover:opacity-90 transition-opacity block"
+                                    onClick={() => window.open(url, '_blank')}
+                                />
+                                <div className="p-2 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                                    <span className="text-[10px] text-gray-500 italic">Click image to open in full size</span>
+                                    <a href={url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-600 font-bold hover:underline uppercase tracking-tighter">Download Original</a>
+                                </div>
+                            </div>
+                        );
+                    } else {
+                        return (
+                            <a
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors text-sm font-medium border border-blue-100 dark:border-blue-800"
+                            >
+                              <FileText className="w-4 h-4" />
+                              View Uploaded Document (PDF)
+                            </a>
+                        );
+                    }
+                })()}
               </div>
             )}
 

@@ -231,6 +231,47 @@ public class SuppliesController : ControllerBase
         var supplies = await _supplyService.GetPendingAsync();
         return Ok(ApiResponse<IEnumerable<Supply>>.SuccessResponse(supplies));
     }
+
+    // Feature 2: Fraud flagging
+    [HttpPost("{id}/flag")]
+    public async Task<ActionResult<ApiResponse<Supply>>> Flag(Guid id, [FromBody] FlagSupplyRequest request)
+    {
+        var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var role = User.FindFirst(ClaimTypes.Role)?.Value;
+        if (role != "MD" && role != "Admin")
+            return StatusCode(403, ApiResponse<string>.ErrorResponse("Only Admin or MD can flag records"));
+
+        if (string.IsNullOrWhiteSpace(request.Reason))
+            return BadRequest(ApiResponse<string>.ErrorResponse("Flag reason is required"));
+
+        try
+        {
+            var flagged = await _supplyService.FlagAsync(id, userId, request.Reason);
+            return Ok(ApiResponse<Supply>.SuccessResponse(flagged, "Supply flagged successfully"));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ApiResponse<string>.ErrorResponse(ex.Message));
+        }
+    }
+
+    [HttpPost("{id}/unflag")]
+    public async Task<ActionResult<ApiResponse<Supply>>> Unflag(Guid id)
+    {
+        var role = User.FindFirst(ClaimTypes.Role)?.Value;
+        if (role != "MD" && role != "Admin")
+            return StatusCode(403, ApiResponse<string>.ErrorResponse("Only Admin or MD can unflag records"));
+
+        try
+        {
+            var unflagged = await _supplyService.UnflagAsync(id);
+            return Ok(ApiResponse<Supply>.SuccessResponse(unflagged, "Supply unflagged successfully"));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ApiResponse<string>.ErrorResponse(ex.Message));
+        }
+    }
 }
 
 public class UpdateSupplyRequest
@@ -242,3 +283,9 @@ public class UpdateSupplyRequest
     public DateTime SupplyDate { get; set; }
     public string? EditReason { get; set; }
 }
+
+public class FlagSupplyRequest
+{
+    public string Reason { get; set; } = string.Empty;
+}
+

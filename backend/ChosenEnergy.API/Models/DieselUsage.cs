@@ -15,5 +15,8 @@ public class DieselUsage
     public int? Mileage { get; set; }
     public Guid? CreatedBy { get; set; }
     public string? CreatedByName { get; set; } // Joined field
+    // Feature 4: Usage classification
+    public string UsageType { get; set; } = "TransportFuel"; // TransportFuel | CargoDiesel | Other
+    public Guid? LinkedSupplyId { get; set; } // Links to a specific supply/sale record
     public DateTime CreatedAt { get; set; }
 }

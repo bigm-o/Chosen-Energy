@@ -31,6 +31,7 @@ public class DepotsController : ControllerBase
                 contact_info as ContactInfo,
                 current_stock as CurrentStock,
                 purchase_price as PurchasePrice,
+                total_outstanding_balance as TotalOutstandingBalance,
                 created_at as CreatedAt
             FROM depots 
             ORDER BY name";
@@ -50,6 +51,7 @@ public class DepotsController : ControllerBase
                 contact_info as ContactInfo,
                 current_stock as CurrentStock,
                 purchase_price as PurchasePrice,
+                total_outstanding_balance as TotalOutstandingBalance,
                 created_at as CreatedAt
             FROM depots 
             WHERE id = @Id";

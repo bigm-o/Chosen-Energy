@@ -15,6 +15,8 @@ public interface IDriverService
     Task<bool> UpdateStatusAsync(Guid driverId, string status);
     Task<Driver?> GetByUserIdAsync(Guid userId);
     Task<bool> CreateUserAccountAsync(Guid driverId);
+    // Feature 6: Driver operation history
+    Task<IEnumerable<DriverOperationEntry>> GetHistoryAsync(Guid driverId, DateTime? startDate, DateTime? endDate);
 }
 
 public class DriverService : IDriverService
@@ -361,4 +363,70 @@ public class DriverService : IDriverService
         var result = await connection.ExecuteAsync(sql, new { UserId = createdUser.Id, Id = driverId });
         return result > 0;
     }
+
+    // Feature 6: Driver operation history with balance tracking
+    public async Task<IEnumerable<DriverOperationEntry>> GetHistoryAsync(Guid driverId, DateTime? startDate, DateTime? endDate)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+
+        var start = startDate ?? DateTime.UtcNow.AddMonths(-3);
+        var end = endDate ?? DateTime.UtcNow.Date.AddDays(1);
+
+        var sql = @"
+            SELECT 'Inward Load' as OperationType, il.load_date as OperationDate, il.quantity as Quantity, 
+                   il.status::text as Status, NULL::text as CustomerName, d.name as DepotOrCustomer,
+                   il.id as OperationId
+            FROM inward_loads il
+            LEFT JOIN depots d ON il.depot_id = d.id
+            WHERE il.driver_id = @DriverId AND il.load_date BETWEEN @Start AND @End
+
+            UNION ALL
+
+            SELECT 'Sale/Supply' as OperationType, s.supply_date as OperationDate, s.quantity as Quantity,
+                   s.status::text as Status, c.company_name as CustomerName, NULL as DepotOrCustomer,
+                   s.id as OperationId
+            FROM supplies s
+            LEFT JOIN customers c ON s.customer_id = c.id
+            WHERE s.driver_id = @DriverId AND s.supply_date BETWEEN @Start AND @End
+
+            UNION ALL
+
+            SELECT 'Transload (Out)' as OperationType, tr.transload_date as OperationDate, tr.quantity as Quantity,
+                   tr.status::text as Status, NULL as CustomerName, NULL as DepotOrCustomer,
+                   tr.id as OperationId
+            FROM transloads tr
+            WHERE tr.from_driver_id = @DriverId AND tr.transload_date BETWEEN @Start AND @End
+
+            UNION ALL
+
+            SELECT 'Transload (In)' as OperationType, tr.transload_date as OperationDate, tr.quantity as Quantity,
+                   tr.status::text as Status, NULL as CustomerName, NULL as DepotOrCustomer,
+                   tr.id as OperationId
+            FROM transloads tr
+            WHERE tr.to_driver_id = @DriverId AND tr.transload_date BETWEEN @Start AND @End
+
+            UNION ALL
+
+            SELECT 'Diesel Usage' as OperationType, du.usage_date as OperationDate, du.quantity_litres as Quantity,
+                   'Recorded' as Status, NULL as CustomerName, du.route as DepotOrCustomer,
+                   du.id as OperationId
+            FROM diesel_usage du
+            WHERE du.driver_id = @DriverId AND du.usage_date BETWEEN @Start AND @End
+
+            ORDER BY OperationDate DESC";
+
+        return await connection.QueryAsync<DriverOperationEntry>(sql, new { DriverId = driverId, Start = start, End = end });
+    }
+}
+
+// Feature 6: DTO for driver history entries
+public class DriverOperationEntry
+{
+    public string OperationType { get; set; } = string.Empty;
+    public DateTime OperationDate { get; set; }
+    public decimal Quantity { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public string? CustomerName { get; set; }
+    public string? DepotOrCustomer { get; set; }
+    public Guid OperationId { get; set; }
 }

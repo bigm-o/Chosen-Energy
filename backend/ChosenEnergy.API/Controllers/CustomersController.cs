@@ -31,6 +31,7 @@ public class CustomersController : ControllerBase
                 c.phone as Phone, 
                 c.email as Email, 
                 c.address as Address,
+                c.is_unverified as IsUnverified,
                 c.created_at as CreatedAt,
                 c.credit_limit as CreditLimit,
                 (
@@ -40,7 +41,7 @@ public class CustomersController : ControllerBase
                 ) as CurrentBalance,
                 COALESCE((SELECT SUM(s.quantity) FROM supplies s WHERE s.customer_id = c.id AND s.status = 'Approved'), 0) as TotalLitresBought
             FROM customers c 
-            ORDER BY c.company_name";
+            ORDER BY c.is_unverified DESC, c.company_name";
         var customers = await connection.QueryAsync<Customer>(sql);
         return Ok(new { success = true, data = customers });
     }
@@ -129,10 +130,12 @@ public class CustomersController : ControllerBase
                 email = @Email,
                 address = @Address,
                 credit_limit = @CreditLimit,
+                is_unverified = FALSE,
                 updated_at = CURRENT_TIMESTAMP
             WHERE id = @Id
             RETURNING id as Id, company_name as CompanyName, contact_person as ContactPerson, 
-                      phone as Phone, email as Email, address as Address, credit_limit as CreditLimit, created_at as CreatedAt";
+                      phone as Phone, email as Email, address as Address, credit_limit as CreditLimit, 
+                      is_unverified as IsUnverified, created_at as CreatedAt";
         
         var customer = await connection.QueryFirstOrDefaultAsync<Customer>(sql, new
         {
@@ -149,6 +152,28 @@ public class CustomersController : ControllerBase
             return NotFound(new { success = false, message = "Customer not found" });
             
         return Ok(new { success = true, data = customer, message = "Customer updated successfully" });
+    }
+
+    // Feature 1: Quick-create an unverified customer from a driver's supply form
+    [HttpPost("quick-create")]
+    public async Task<IActionResult> QuickCreate([FromBody] QuickCreateCustomerRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.CompanyName))
+            return BadRequest(new { success = false, message = "Company name is required" });
+
+        using var connection = _connectionFactory.CreateConnection();
+        var sql = @"
+            INSERT INTO customers (id, company_name, is_unverified, created_at, updated_at)
+            VALUES (@Id, @CompanyName, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            RETURNING id as Id, company_name as CompanyName, is_unverified as IsUnverified, created_at as CreatedAt";
+
+        var customer = await connection.QueryFirstAsync<Customer>(sql, new
+        {
+            Id = Guid.NewGuid(),
+            request.CompanyName
+        });
+
+        return Ok(new { success = true, data = customer, message = "Unverified customer created. Admin notified to complete details." });
     }
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
@@ -168,6 +193,11 @@ public class CreateCustomerRequest
     public string? Email { get; set; }
     public string? Address { get; set; }
     public decimal CreditLimit { get; set; }
+}
+
+public class QuickCreateCustomerRequest
+{
+    public string CompanyName { get; set; } = string.Empty;
 }
 
 public class UpdateCustomerRequest

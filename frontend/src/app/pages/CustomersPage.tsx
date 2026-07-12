@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Plus, Users, Eye, Phone, Mail, User, Search, AlertCircle, Edit, Trash2, CheckCircle, TrendingUp, Loader2 } from 'lucide-react';
-import { apiRequest } from '@/utils/api';
+import { Plus, Users, Eye, Phone, Mail, User, Search, AlertCircle, Edit, Trash2, CheckCircle, TrendingUp, Loader2, Flag, X } from 'lucide-react';
+import { apiRequest, getFileUrl } from '@/utils/api';
 import { Modal } from '@/app/components/Modal';
 
 interface CustomerItem {
@@ -13,6 +13,7 @@ interface CustomerItem {
     address: string;
     totalLitresBought: number;
     createdAt: string;
+    isUnverified?: boolean;
 }
 
 export function CustomersPage() {
@@ -30,6 +31,9 @@ export function CustomersPage() {
     const [viewingCustomer, setViewingCustomer] = useState<CustomerItem | null>(null);
     const [customerHistory, setCustomerHistory] = useState<any[]>([]);
     const [loadingHistory, setLoadingHistory] = useState(false);
+    // Feature 8: Layered sale detail modal
+    const [selectedSale, setSelectedSale] = useState<any | null>(null);
+    const [loadingSaleDetail, setLoadingSaleDetail] = useState(false);
 
     const [formData, setFormData] = useState({
         companyName: '',
@@ -144,6 +148,22 @@ export function CustomersPage() {
             console.error('Failed to load history', err);
         } finally {
             setLoadingHistory(false);
+        }
+    };
+
+    // Feature 8: Load full sale details
+    const handleViewSaleDetail = async (saleId: string) => {
+        setLoadingSaleDetail(true);
+        try {
+            const response = await apiRequest(`/api/supplies/${saleId}`);
+            if (response.ok) {
+                const data = await response.json();
+                setSelectedSale(data.data);
+            }
+        } catch (err) {
+            console.error('Failed to load sale detail', err);
+        } finally {
+            setLoadingSaleDetail(false);
         }
     };
 
@@ -280,7 +300,12 @@ export function CustomersPage() {
                                     {getInitials(customer.companyName)}
                                 </div>
                                 <div className="pr-10">
-                                    <h3 className="font-bold text-gray-900 dark:text-gray-100 leading-tight">{customer.companyName}</h3>
+                                    <div className="flex items-center gap-2">
+                                        <h3 className="font-bold text-gray-900 dark:text-gray-100 leading-tight">{customer.companyName}</h3>
+                                        {customer.isUnverified && (
+                                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 uppercase tracking-wider">Unverified</span>
+                                        )}
+                                    </div>
                                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">CUS-{String(index + 1).padStart(3, '0')}</p>
                                 </div>
                             </div>
@@ -413,11 +438,12 @@ export function CustomersPage() {
                                         <th className="px-4 py-2 font-bold uppercase text-[10px] text-gray-500 dark:text-gray-200">Qty (L)</th>
                                         <th className="px-4 py-2 font-bold uppercase text-[10px] text-gray-500 dark:text-gray-200">Amount</th>
                                         <th className="px-4 py-2 font-bold uppercase text-[10px] text-gray-500 dark:text-gray-200">Status</th>
+                                        <th className="px-4 py-2 font-bold uppercase text-[10px] text-gray-500 dark:text-gray-200 text-center">View</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y">
                                     {customerHistory.map(sale => (
-                                        <tr key={sale.id} className="border-b border-gray-100 dark:border-gray-800">
+                                        <tr key={sale.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors">
                                             <td className="px-4 py-2 text-gray-900 dark:text-gray-100">{new Date(sale.supplyDate).toLocaleDateString()}</td>
                                             <td className="px-4 py-2 text-gray-900 dark:text-gray-100 font-medium">{sale.quantity.toLocaleString()}</td>
                                             <td className="px-4 py-2 text-gray-900 dark:text-gray-100 font-bold">₦{sale.totalAmount.toLocaleString()}</td>
@@ -426,10 +452,19 @@ export function CustomersPage() {
                                                     {sale.status}
                                                 </span>
                                             </td>
+                                            <td className="px-4 py-2 text-center">
+                                                <button
+                                                    onClick={() => handleViewSaleDetail(sale.id)}
+                                                    className="p-1 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                                                    title="View Sale Details"
+                                                >
+                                                    <Eye className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                                </button>
+                                            </td>
                                         </tr>
                                     ))}
                                     {customerHistory.length === 0 && !loadingHistory && (
-                                        <tr><td colSpan={4} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">No records found</td></tr>
+                                        <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">No records found</td></tr>
                                     )}
                                 </tbody>
                             </table>
@@ -437,6 +472,79 @@ export function CustomersPage() {
                     </div>
                 )}
             </Modal>
+
+            {/* Feature 8: Layered Sale Detail Modal – renders on top of customer history modal */}
+            {selectedSale && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-700">
+                            <div>
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Sale Details</h3>
+                                <p className="text-xs text-blue-600 dark:text-blue-400 font-bold">{selectedSale.saleId}</p>
+                            </div>
+                            <button onClick={() => setSelectedSale(null)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"><X className="w-5 h-5" /></button>
+                        </div>
+                        {loadingSaleDetail ? (
+                            <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-blue-500" /></div>
+                        ) : (
+                            <div className="p-6 space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="bg-gray-50 dark:bg-gray-900/50 p-3 rounded-xl">
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Customer</p>
+                                        <p className="font-bold text-gray-900 dark:text-gray-100">{selectedSale.customerName}</p>
+                                    </div>
+                                    <div className="bg-gray-50 dark:bg-gray-900/50 p-3 rounded-xl">
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Date</p>
+                                        <p className="font-bold text-gray-900 dark:text-gray-100">{new Date(selectedSale.supplyDate).toLocaleDateString('en-GB')}</p>
+                                    </div>
+                                    <div className="bg-gray-50 dark:bg-gray-900/50 p-3 rounded-xl">
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Volume</p>
+                                        <p className="font-bold text-gray-900 dark:text-gray-100">{selectedSale.quantity?.toLocaleString()} L</p>
+                                    </div>
+                                    <div className="bg-gray-50 dark:bg-gray-900/50 p-3 rounded-xl">
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Rate</p>
+                                        <p className="font-bold text-gray-900 dark:text-gray-100">₦{selectedSale.pricePerLitre?.toLocaleString()}/L</p>
+                                    </div>
+                                    <div className="bg-gray-50 dark:bg-gray-900/50 p-3 rounded-xl">
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Total Amount</p>
+                                        <p className="font-black text-green-700 dark:text-green-400 text-lg">₦{selectedSale.totalAmount?.toLocaleString()}</p>
+                                    </div>
+                                    <div className="bg-gray-50 dark:bg-gray-900/50 p-3 rounded-xl">
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Status</p>
+                                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                                            selectedSale.status === 'Approved' ? 'bg-green-100 text-green-800' :
+                                            selectedSale.status === 'Rejected' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'
+                                        }`}>{selectedSale.status}</span>
+                                    </div>
+                                    <div className="bg-gray-50 dark:bg-gray-900/50 p-3 rounded-xl">
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Driver</p>
+                                        <p className="font-bold text-gray-900 dark:text-gray-100">{selectedSale.driverName || '—'}</p>
+                                    </div>
+                                    <div className="bg-gray-50 dark:bg-gray-900/50 p-3 rounded-xl">
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Truck</p>
+                                        <p className="font-bold text-gray-900 dark:text-gray-100">{selectedSale.truckRegNumber || '—'}</p>
+                                    </div>
+                                </div>
+                                {selectedSale.invoiceUrl && (
+                                    <a href={getFileUrl(selectedSale.invoiceUrl)} target="_blank" rel="noopener noreferrer"
+                                       className="flex items-center gap-2 text-blue-600 dark:text-blue-400 text-sm font-medium hover:underline">
+                                        <Eye className="w-4 h-4" /> View Invoice
+                                    </a>
+                                )}
+                                {selectedSale.isFlagged && (
+                                    <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/30 rounded-xl border border-red-200">
+                                        <Flag className="w-4 h-4 text-red-600" />
+                                        <div>
+                                            <p className="text-xs font-bold text-red-700">Flagged for Review</p>
+                                            <p className="text-xs text-red-600">{selectedSale.flagReason}</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
 
             <Modal
                 isOpen={showDeleteModal}

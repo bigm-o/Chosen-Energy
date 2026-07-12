@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using ChosenEnergy.API.Models;
 using ChosenEnergy.API.Services;
+using Dapper;
+using ChosenEnergy.API.Data;
 
 namespace ChosenEnergy.API.Controllers;
 
@@ -12,10 +14,12 @@ namespace ChosenEnergy.API.Controllers;
 public class InwardLoadsController : ControllerBase
 {
     private readonly IInwardLoadService _loadService;
+    private readonly IDbConnectionFactory _connectionFactory;
 
-    public InwardLoadsController(IInwardLoadService loadService)
+    public InwardLoadsController(IInwardLoadService loadService, IDbConnectionFactory connectionFactory)
     {
         _loadService = loadService;
+        _connectionFactory = connectionFactory;
     }
 
     [HttpGet]
@@ -25,6 +29,36 @@ public class InwardLoadsController : ControllerBase
         return Ok(new { success = true, data = logs });
     }
 
+    // Feature 5: Get approved purchases that have remaining undisbursed quantity
+    [HttpGet("pending-purchases")]
+    [Authorize(Roles = "Admin,MD")]
+    public async Task<IActionResult> GetPendingPurchases()
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        var sql = @"
+            SELECT 
+                p.id as Id,
+                p.purchase_id as PurchaseId,
+                p.quantity as Quantity,
+                p.cost_per_litre as CostPerLitre,
+                p.total_cost as TotalCost,
+                p.purchase_date as PurchaseDate,
+                p.status::text as Status,
+                COALESCE(p.disbursed_quantity, 0) as DisbursedQuantity,
+                p.quantity - COALESCE(p.disbursed_quantity, 0) as RemainingQuantity,
+                d.name as DepotName,
+                u.full_name as CreatedByName
+            FROM purchases p
+            LEFT JOIN depots d ON p.depot_id = d.id
+            LEFT JOIN users u ON p.created_by = u.id
+            WHERE p.status = 'Approved'::approval_status
+            AND COALESCE(p.disbursed_quantity, 0) < p.quantity
+            ORDER BY p.purchase_date DESC";
+
+        var purchases = await connection.QueryAsync<Purchase>(sql);
+        return Ok(new { success = true, data = purchases });
+    }
+
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] InwardLoad load)
     {
@@ -32,6 +66,16 @@ public class InwardLoadsController : ControllerBase
         if (string.IsNullOrEmpty(userIdStr)) return Unauthorized();
 
         var created = await _loadService.CreateAsync(load, Guid.Parse(userIdStr));
+
+        // Feature 5: Update disbursed_quantity on the purchase record
+        if (load.PurchaseId.HasValue)
+        {
+            using var connection = _connectionFactory.CreateConnection();
+            await connection.ExecuteAsync(
+                "UPDATE purchases SET disbursed_quantity = COALESCE(disbursed_quantity, 0) + @Qty WHERE id = @Id",
+                new { Qty = load.Quantity, Id = load.PurchaseId.Value });
+        }
+
         return Ok(new { success = true, data = created, message = "Inward load created successfully" });
     }
 
@@ -42,6 +86,16 @@ public class InwardLoadsController : ControllerBase
         if (string.IsNullOrEmpty(userIdStr)) return Unauthorized();
 
         var created = await _loadService.CreateBulkAsync(request, Guid.Parse(userIdStr));
+
+        // Feature 5: Update disbursed_quantity on the purchase record
+        if (request.PurchaseId.HasValue)
+        {
+            using var connection = _connectionFactory.CreateConnection();
+            await connection.ExecuteAsync(
+                "UPDATE purchases SET disbursed_quantity = COALESCE(disbursed_quantity, 0) + @Qty WHERE id = @Id",
+                new { Qty = request.Quantity, Id = request.PurchaseId.Value });
+        }
+
         return Ok(new { success = true, data = created, message = "Bulk inward loads created" });
     }
 
@@ -81,3 +135,4 @@ public class InwardLoadsController : ControllerBase
         return Ok(new { success = true, message = "Batch approved successfully" });
     }
 }
+

@@ -39,6 +39,8 @@ public class DieselUsageService : IDieselUsageService
                 du.mileage as Mileage,
                 du.created_by as CreatedBy,
                 u.full_name as CreatedByName,
+                COALESCE(du.usage_type, 'TransportFuel') as UsageType,
+                du.linked_supply_id as LinkedSupplyId,
                 du.created_at as CreatedAt
             FROM diesel_usage du
             JOIN trucks t ON du.truck_id = t.id
@@ -133,8 +135,8 @@ public class DieselUsageService : IDieselUsageService
     {
         using var connection = _connectionFactory.CreateConnection();
         var sql = @"
-            INSERT INTO diesel_usage (truck_id, driver_id, quantity_litres, usage_date, route, mileage, created_by)
-            VALUES (@TruckId, @DriverId, @QuantityLitres, @UsageDate, @Route, @Mileage, @CreatedBy)
+            INSERT INTO diesel_usage (truck_id, driver_id, quantity_litres, usage_date, route, mileage, created_by, usage_type, linked_supply_id)
+            VALUES (@TruckId, @DriverId, @QuantityLitres, @UsageDate, @Route, @Mileage, @CreatedBy, @UsageType, @LinkedSupplyId)
             RETURNING id";
         
         var id = await connection.ExecuteScalarAsync<Guid>(sql, new 
@@ -145,7 +147,9 @@ public class DieselUsageService : IDieselUsageService
             usage.UsageDate,
             usage.Route,
             usage.Mileage,
-            CreatedBy = userId
+            CreatedBy = userId,
+            UsageType = usage.UsageType ?? "TransportFuel",
+            usage.LinkedSupplyId
         });
 
         return await GetByIdAsync(id);

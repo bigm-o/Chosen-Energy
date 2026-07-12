@@ -18,6 +18,9 @@ public interface ISupplyService
     Task<IEnumerable<Supply>> GetPendingAsync();
     Task<IEnumerable<Supply>> GetByDateRangeAsync(DateTime start, DateTime end);
     Task<bool> DeleteAsync(Guid id);
+    // Feature 2
+    Task<Supply> FlagAsync(Guid id, Guid userId, string reason);
+    Task<Supply> UnflagAsync(Guid id);
 }
 
 public class SupplyService : ISupplyService
@@ -57,13 +60,18 @@ public class SupplyService : ISupplyService
                 s.edit_reason as EditReason,
                 s.has_pending_edit as HasPendingEdit,
                 s.original_values as OriginalValues,
+                s.is_flagged as IsFlagged,
+                s.flag_reason as FlagReason,
+                s.flagged_by as FlaggedBy,
+                s.flagged_at as FlaggedAt,
                 s.created_at as CreatedAt,
                 c.company_name as CustomerName,
                 d.name as DepotName,
                 t.registration_number as TruckRegNumber,
                 dr.full_name as DriverName,
                 u.full_name as CreatedByName,
-                u2.full_name as EditedByName
+                u2.full_name as EditedByName,
+                u3.full_name as FlaggedByName
             FROM supplies s
             LEFT JOIN customers c ON s.customer_id = c.id
             LEFT JOIN depots d ON s.depot_id = d.id
@@ -71,6 +79,7 @@ public class SupplyService : ISupplyService
             LEFT JOIN drivers dr ON s.driver_id = dr.id
             LEFT JOIN users u ON s.created_by = u.id
             LEFT JOIN users u2 ON s.edited_by = u2.id
+            LEFT JOIN users u3 ON s.flagged_by = u3.id
             ORDER BY s.created_at DESC";
         
         return await connection.QueryAsync<Supply>(sql);
@@ -609,5 +618,38 @@ public class SupplyService : ISupplyService
         using var connection = _connectionFactory.CreateConnection();
         var rows = await connection.ExecuteAsync("DELETE FROM supplies WHERE id = @Id AND status = 'Pending'::approval_status", new { Id = id });
         return rows > 0;
+    }
+
+    // Feature 2: Fraud flagging
+    public async Task<Supply> FlagAsync(Guid id, Guid userId, string reason)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        var sql = @"
+            UPDATE supplies 
+            SET is_flagged = TRUE,
+                flag_reason = @Reason,
+                flagged_by = @UserId,
+                flagged_at = CURRENT_TIMESTAMP,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = @Id
+            RETURNING id as Id, sale_id as SaleId, status::text as Status, is_flagged as IsFlagged, flag_reason as FlagReason";
+
+        return await connection.QueryFirstAsync<Supply>(sql, new { Id = id, UserId = userId, Reason = reason });
+    }
+
+    public async Task<Supply> UnflagAsync(Guid id)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        var sql = @"
+            UPDATE supplies 
+            SET is_flagged = FALSE,
+                flag_reason = NULL,
+                flagged_by = NULL,
+                flagged_at = NULL,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = @Id
+            RETURNING id as Id, sale_id as SaleId, status::text as Status, is_flagged as IsFlagged";
+
+        return await connection.QueryFirstAsync<Supply>(sql, new { Id = id });
     }
 }

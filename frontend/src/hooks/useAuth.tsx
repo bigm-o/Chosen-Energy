@@ -9,6 +9,7 @@ interface AuthContextType {
   login: (data: LoginRequest) => Promise<void>;
   logout: () => void;
   updateTheme: (theme: 'light' | 'dark') => Promise<void>;
+  updatePermissions: (permissions: string[]) => void;
   isAuthenticated: boolean;
 }
 
@@ -162,12 +163,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const response = await authApi.login(data);
     if (response.success && response.data) {
       const userData: User = {
-        id: '',
+        id: response.data.id,
         email: response.data.email,
         fullName: response.data.fullName,
         role: response.data.role as any,
         isActive: true,
         themePreference: (response.data.themePreference as 'light' | 'dark') || 'light',
+        customPermissions: response.data.customPermissions || [],
       };
       const newToken = response.data.token;
       const newRefreshToken = response.data.refreshToken;
@@ -224,6 +226,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updatePermissions = (permissions: string[]) => {
+    if (!user) return;
+    const updatedUser = { ...user, customPermissions: permissions };
+    setUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+  };
+
   // Apply theme on initial load when user is loaded
   useEffect(() => {
     if (user?.themePreference === 'dark') {
@@ -234,7 +243,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, updateTheme, isAuthenticated: !!user && !!token }}>
+    <AuthContext.Provider value={{ user, token, login, logout, updateTheme, updatePermissions, isAuthenticated: !!user && !!token }}>
       {children}
     </AuthContext.Provider>
   );

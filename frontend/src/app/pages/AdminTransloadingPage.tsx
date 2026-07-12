@@ -18,6 +18,8 @@ interface Transload {
 }
 
 export function AdminTransloadingPage() {
+    const { user } = useAuth();
+    const canApprove = user?.role === 'MD' || user?.customPermissions?.includes('approve_transloading');
     const [transloads, setTransloads] = useState<Transload[]>([]);
     const [loading, setLoading] = useState(true);
     const [processingId, setProcessingId] = useState<string | null>(null);
@@ -199,7 +201,7 @@ export function AdminTransloadingPage() {
                                             </span>
                                         </td>
                                          <td className="px-6 py-4">
-                                            {t.status === 'Pending' && t.isConfirmedByReceiver && (
+                                            {t.status === 'Pending' && t.isConfirmedByReceiver && canApprove && (
                                                 <div className="flex gap-2">
                                                     <button 
                                                         onClick={() => handleApprove(t.id)} 

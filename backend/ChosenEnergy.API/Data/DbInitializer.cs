@@ -47,6 +47,7 @@ public class DbInitializer
             await connection.ExecuteAsync("ALTER TABLE users ADD COLUMN IF NOT EXISTS custom_permissions TEXT;");
             await connection.ExecuteAsync("ALTER TABLE users ADD COLUMN IF NOT EXISTS requires_password_change BOOLEAN DEFAULT FALSE;");
             await connection.ExecuteAsync("ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMP;");
+            await connection.ExecuteAsync("ALTER TABLE users ADD COLUMN IF NOT EXISTS theme_preference VARCHAR(20) DEFAULT 'light';");
         }
         catch { /* Ignore */ }
 
@@ -75,6 +76,53 @@ public class DbInitializer
         try
         {
             await connection.ExecuteAsync("ALTER TABLE supplies ADD COLUMN IF NOT EXISTS cost_per_litre DECIMAL(18, 2) NOT NULL DEFAULT 0;");
+        }
+        catch { /* Ignore */ }
+
+        // Feature: Purchases Payment & Disbursement Tracking
+        try
+        {
+            await connection.ExecuteAsync("ALTER TABLE purchases ADD COLUMN IF NOT EXISTS original_cost DECIMAL(18, 2) NOT NULL DEFAULT 0;");
+            await connection.ExecuteAsync("ALTER TABLE purchases ADD COLUMN IF NOT EXISTS amount_paid DECIMAL(18, 2) NOT NULL DEFAULT 0;");
+            await connection.ExecuteAsync("ALTER TABLE purchases ADD COLUMN IF NOT EXISTS balance_forward DECIMAL(18, 2) NOT NULL DEFAULT 0;");
+            await connection.ExecuteAsync("ALTER TABLE purchases ADD COLUMN IF NOT EXISTS disbursed_quantity DECIMAL(18, 2) NOT NULL DEFAULT 0;");
+        }
+        catch { /* Ignore */ }
+
+        // Feature: Depot Balance Tracking
+        try
+        {
+            await connection.ExecuteAsync("ALTER TABLE depots ADD COLUMN IF NOT EXISTS total_outstanding_balance DECIMAL(18, 2) NOT NULL DEFAULT 0;");
+        }
+        catch { /* Ignore */ }
+
+        // Feature: Customer Verification
+        try
+        {
+            await connection.ExecuteAsync("ALTER TABLE customers ADD COLUMN IF NOT EXISTS is_unverified BOOLEAN DEFAULT FALSE;");
+        }
+        catch { /* Ignore */ }
+
+        // Feature: Supply Depot & Fraud Tracking
+        try
+        {
+            await connection.ExecuteAsync("ALTER TABLE supplies ADD COLUMN IF NOT EXISTS depot_id UUID REFERENCES depots(id);");
+            await connection.ExecuteAsync("ALTER TABLE supplies ADD COLUMN IF NOT EXISTS invoice_url TEXT;");
+            await connection.ExecuteAsync("ALTER TABLE supplies ADD COLUMN IF NOT EXISTS rejection_reason TEXT;");
+            await connection.ExecuteAsync("ALTER TABLE supplies ADD COLUMN IF NOT EXISTS edit_reason TEXT;");
+            await connection.ExecuteAsync("ALTER TABLE supplies ADD COLUMN IF NOT EXISTS has_pending_edit BOOLEAN DEFAULT FALSE;");
+            await connection.ExecuteAsync("ALTER TABLE supplies ADD COLUMN IF NOT EXISTS original_values TEXT;");
+            await connection.ExecuteAsync("ALTER TABLE supplies ADD COLUMN IF NOT EXISTS is_flagged BOOLEAN DEFAULT FALSE;");
+            await connection.ExecuteAsync("ALTER TABLE supplies ADD COLUMN IF NOT EXISTS flag_reason TEXT;");
+            await connection.ExecuteAsync("ALTER TABLE supplies ADD COLUMN IF NOT EXISTS flagged_by UUID REFERENCES users(id);");
+            await connection.ExecuteAsync("ALTER TABLE supplies ADD COLUMN IF NOT EXISTS flagged_at TIMESTAMP;");
+        }
+        catch { /* Ignore */ }
+
+        // Ensure Sale ID sequence exists
+        try
+        {
+            await connection.ExecuteAsync("CREATE SEQUENCE IF NOT EXISTS sale_id_seq START 1;");
         }
         catch { /* Ignore */ }
 

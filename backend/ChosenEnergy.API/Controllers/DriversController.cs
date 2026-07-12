@@ -166,6 +166,22 @@ public class DriversController : ControllerBase
             return StatusCode(500, new { success = false, message = ex.Message });
         }
     }
+
+    // Feature 6: Driver operation history
+    [HttpGet("{id}/history")]
+    [Authorize(Roles = "Admin,MD")]
+    public async Task<IActionResult> GetHistory(Guid id, [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate)
+    {
+        try
+        {
+            var history = await _driverService.GetHistoryAsync(id, startDate, endDate);
+            return Ok(new { success = true, data = history });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { success = false, message = ex.Message });
+        }
+    }
 }
 
 public class AssignTruckRequest

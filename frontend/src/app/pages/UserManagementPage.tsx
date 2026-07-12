@@ -8,6 +8,7 @@ import {
     Users, Plus, Shield, KeyRound, UserX, UserCheck,
     MoreVertical, Loader2, CheckSquare, Square, Search, Clock
 } from 'lucide-react';
+import { ALL_PERMISSIONS, APPROVAL_MAPPING, getRoleDefaultPermissions } from '@/utils/permissions';
 
 interface AppUser {
     id: string;
@@ -22,23 +23,6 @@ interface AppUser {
     lastLoginAt?: string;
 }
 
-const ALL_PERMISSIONS = [
-    { id: 'view_purchasing', label: 'View Purchasing', section: 'Operations' },
-    { id: 'view_supply', label: 'View Sales & Supply', section: 'Operations' },
-    { id: 'view_transloading', label: 'View Transloading', section: 'Operations' },
-    { id: 'view_daily_logs', label: 'View Daily Logs', section: 'Operations' },
-    { id: 'view_approvals', label: 'View Approvals', section: 'Operations' },
-    { id: 'view_inward_loads', label: 'View Disbursements', section: 'Operations' },
-    { id: 'view_trucks', label: 'View Trucks', section: 'Fleet' },
-    { id: 'view_drivers', label: 'View Drivers', section: 'Fleet' },
-    { id: 'view_maintenance', label: 'View Maintenance', section: 'Fleet' },
-    { id: 'view_diesel_usage', label: 'View Diesel Usage', section: 'Fleet' },
-    { id: 'view_customers', label: 'View Customers', section: 'Other' },
-    { id: 'view_depots', label: 'View Depots', section: 'Other' },
-    { id: 'view_invoices', label: 'View Invoices', section: 'Finance' },
-    { id: 'view_expenses', label: 'View Expenses', section: 'Finance' },
-];
-
 const ROLE_BADGE: Record<string, string> = {
     MD: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
     Admin: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
@@ -47,7 +31,7 @@ const ROLE_BADGE: Record<string, string> = {
 };
 
 export function UserManagementPage() {
-    const { user: currentUser } = useAuth();
+    const { user: currentUser, updatePermissions } = useAuth();
     const [users, setUsers] = useState<AppUser[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -133,7 +117,13 @@ export function UserManagementPage() {
 
     const openPermissions = (user: AppUser) => {
         setSelectedUser(user);
-        setSelectedPermissions(user.customPermissions || []);
+        
+        // Perfectly in line: if they have no custom permissions, show their role defaults as checked
+        const currentPerms = (user.customPermissions && user.customPermissions.length > 0) 
+            ? user.customPermissions 
+            : getRoleDefaultPermissions(user.role);
+            
+        setSelectedPermissions(currentPerms);
         setShowPermissionsModal(true);
         setMenuOpen(null);
     };
@@ -149,6 +139,12 @@ export function UserManagementPage() {
             const data = await res.json();
             if (data.success) {
                 toast.success('Permissions updated successfully');
+                
+                // If editing self, update local context for real-time changes
+                if (selectedUser.id === currentUser?.id) {
+                    updatePermissions(selectedPermissions);
+                }
+
                 setShowPermissionsModal(false);
                 fetchUsers();
             } else {
@@ -194,10 +190,24 @@ export function UserManagementPage() {
         }
     };
 
-    const togglePermission = (perm: string) => {
-        setSelectedPermissions(prev =>
-            prev.includes(perm) ? prev.filter(p => p !== perm) : [...prev, perm]
-        );
+    const togglePermission = (id: string) => {
+        if (selectedPermissions.includes(id)) {
+            let next = selectedPermissions.filter(p => p !== id);
+            // If we uncheck a view permission, also uncheck its approval
+            const approveId = APPROVAL_MAPPING[id];
+            if (approveId) {
+                next = next.filter(p => p !== approveId);
+            }
+            setSelectedPermissions(next);
+        } else {
+            let next = [...selectedPermissions, id];
+            // If we check an approval permission, also check its view
+            const viewId = Object.keys(APPROVAL_MAPPING).find(key => APPROVAL_MAPPING[key] === id);
+            if (viewId && !selectedPermissions.includes(viewId)) {
+                next.push(viewId);
+            }
+            setSelectedPermissions(next);
+        }
     };
 
     const permissionSections = [...new Set(ALL_PERMISSIONS.map(p => p.section))];
@@ -401,8 +411,8 @@ export function UserManagementPage() {
             {/* Permissions Modal */}
             <Modal isOpen={showPermissionsModal} onClose={() => setShowPermissionsModal(false)} title={`Permissions — ${selectedUser?.fullName}`} size="md">
                 <div className="space-y-5">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                        Custom permissions <strong>extend</strong> the default access for this user's role. They won't restrict existing role access.
+                    <p className="text-xs text-gray-500 dark:text-gray-400 bg-indigo-50 dark:bg-indigo-900/20 p-3 rounded-lg border border-indigo-100 dark:border-indigo-800">
+                        Access is strictly limited to the selections below. Unchecking a box will immediately restrict the user's access to that module.
                     </p>
                     {permissionSections.map(section => (
                         <div key={section}>
@@ -410,12 +420,27 @@ export function UserManagementPage() {
                             <div className="space-y-1.5">
                                 {ALL_PERMISSIONS.filter(p => p.section === section).map(perm => {
                                     const checked = selectedPermissions.includes(perm.id);
+                                    const approveId = APPROVAL_MAPPING[perm.id];
+                                    const approveChecked = approveId ? selectedPermissions.includes(approveId) : false;
+
                                     return (
-                                        <button key={perm.id} onClick={() => togglePermission(perm.id)}
-                                            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold border transition-all ${checked ? 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/20 dark:border-blue-700 dark:text-blue-400' : 'bg-gray-50 border-gray-200 text-gray-600 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-400'}`}>
-                                            {checked ? <CheckSquare className="w-4 h-4 flex-shrink-0" /> : <Square className="w-4 h-4 flex-shrink-0" />}
-                                            {perm.label}
-                                        </button>
+                                        <div key={perm.id} className="space-y-2">
+                                            <button onClick={() => togglePermission(perm.id)}
+                                                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold border transition-all ${checked ? 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/20 dark:border-blue-700 dark:text-blue-400' : 'bg-gray-50 border-gray-200 text-gray-600 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-400'}`}>
+                                                {checked ? <CheckSquare className="w-4 h-4 flex-shrink-0" /> : <Square className="w-4 h-4 flex-shrink-0" />}
+                                                {perm.label}
+                                            </button>
+                                            
+                                            {checked && approveId && (
+                                                <div className="ml-8 animate-in slide-in-from-left-2 fade-in duration-200">
+                                                    <button onClick={() => togglePermission(approveId)}
+                                                        className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest border transition-all ${approveChecked ? 'bg-green-50 border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-700 dark:text-green-400' : 'bg-white border-gray-100 text-gray-400 dark:bg-gray-800 dark:border-gray-700'}`}>
+                                                        {approveChecked ? <CheckSquare className="w-3.5 h-3.5 flex-shrink-0" /> : <Square className="w-3.5 h-3.5 flex-shrink-0" />}
+                                                        Can Approve Processes
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
                                     );
                                 })}
                             </div>

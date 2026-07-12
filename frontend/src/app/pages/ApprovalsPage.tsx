@@ -27,6 +27,19 @@ interface ApprovalItem {
 
 export function ApprovalsPage() {
     const { user } = useAuth();
+    const canApproveEverything = user?.role === 'MD' || user?.customPermissions?.includes('approve_approvals');
+    
+    const canApproveType = (type: string) => {
+        if (canApproveEverything) return true;
+        const permissionMap: Record<string, string> = {
+            'Supply': 'approve_supply',
+            'Purchase': 'approve_purchasing',
+            'Disbursement': 'approve_inward_loads',
+            'Trans-load': 'approve_transloading',
+            'Maintenance': 'approve_maintenance'
+        };
+        return user?.customPermissions?.includes(permissionMap[type]);
+    };
     const [loading, setLoading] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
@@ -251,30 +264,34 @@ export function ApprovalsPage() {
                                                 </div>
                                             </div>
                                         </div>                                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button
-                                                onClick={() => handleAction(item.id, 'approve')}
-                                                disabled={isSubmitting}
-                                                className="p-2.5 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 rounded-xl hover:bg-green-100 transition-all active:scale-95 disabled:opacity-50"
-                                                title="Approve"
-                                            >
-                                                {isSubmitting && actionToConfirm?.id === item.id && actionToConfirm?.action === 'approve' ? (
-                                                    <Loader2 className="w-5 h-5 animate-spin" />
-                                                ) : (
-                                                    <CheckCircle className="w-5 h-5" />
-                                                )}
-                                            </button>
-                                            <button
-                                                onClick={() => handleAction(item.id, 'reject')}
-                                                disabled={isSubmitting}
-                                                className="p-2.5 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 rounded-xl hover:bg-red-100 transition-all active:scale-95 disabled:opacity-50"
-                                                title="Reject"
-                                            >
-                                                {isSubmitting && actionToConfirm?.id === item.id && actionToConfirm?.action === 'reject' ? (
-                                                    <Loader2 className="w-5 h-5 animate-spin" />
-                                                ) : (
-                                                    <XCircle className="w-5 h-5" />
-                                                )}
-                                            </button>
+                                            {canApproveType(item.type) && (
+                                                <>
+                                                    <button
+                                                        onClick={() => handleAction(item.id, 'approve')}
+                                                        disabled={isSubmitting}
+                                                        className="p-2.5 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 rounded-xl hover:bg-green-100 transition-all active:scale-95 disabled:opacity-50"
+                                                        title="Approve"
+                                                    >
+                                                        {isSubmitting && actionToConfirm?.id === item.id && actionToConfirm?.action === 'approve' ? (
+                                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                                        ) : (
+                                                            <CheckCircle className="w-5 h-5" />
+                                                        )}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleAction(item.id, 'reject')}
+                                                        disabled={isSubmitting}
+                                                        className="p-2.5 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 rounded-xl hover:bg-red-100 transition-all active:scale-95 disabled:opacity-50"
+                                                        title="Reject"
+                                                    >
+                                                        {isSubmitting && actionToConfirm?.id === item.id && actionToConfirm?.action === 'reject' ? (
+                                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                                        ) : (
+                                                            <XCircle className="w-5 h-5" />
+                                                        )}
+                                                    </button>
+                                                </>
+                                            )}
                                             <button
                                                 onClick={() => handleView(item)}
                                                 disabled={isSubmitting}

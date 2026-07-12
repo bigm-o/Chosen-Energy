@@ -46,12 +46,14 @@ public class AuthController : ControllerBase
         
         var response = new LoginResponse
         {
+            Id = user.Id.ToString(),
             Token = token,
             RefreshToken = refreshToken,
             Email = user.Email,
             FullName = user.FullName,
             Role = user.Role.ToString(),
-            ThemePreference = user.ThemePreference
+            ThemePreference = user.ThemePreference,
+            CustomPermissions = user.CustomPermissions
         };
 
         return Ok(ApiResponse<LoginResponse>.SuccessResponse(response, "Login successful"));
@@ -71,17 +73,19 @@ public class AuthController : ControllerBase
         var token = _jwtService.GenerateToken(user);
         var refreshToken = _jwtService.GenerateRefreshToken();
         
-        var response = new LoginResponse
+        var responseRegister = new LoginResponse
         {
+            Id = user.Id.ToString(),
             Token = token,
             RefreshToken = refreshToken,
             Email = user.Email,
             FullName = user.FullName,
             Role = user.Role.ToString(),
-            ThemePreference = user.ThemePreference
+            ThemePreference = user.ThemePreference,
+            CustomPermissions = user.CustomPermissions
         };
 
-        return Ok(ApiResponse<LoginResponse>.SuccessResponse(response, "Registration successful"));
+        return Ok(ApiResponse<LoginResponse>.SuccessResponse(responseRegister, "Registration successful"));
     }
 
     [HttpPost("refresh")]

@@ -17,8 +17,8 @@ import {
   ChevronDown,
   DollarSign,
   X,
-
 } from 'lucide-react';
+import { hasPermission } from '@/utils/permissions';
 import { useState } from 'react';
 
 interface SidebarProps {
@@ -29,9 +29,19 @@ interface SidebarProps {
   setCollapsed: (collapsed: boolean) => void;
   mobileOpen: boolean;
   setMobileOpen: (open: boolean) => void;
+  customPermissions?: string[];
 }
 
-export function Sidebar({ currentPage, setCurrentPage, userRole, collapsed, setCollapsed, mobileOpen, setMobileOpen }: SidebarProps) {
+export function Sidebar({ 
+  currentPage, 
+  setCurrentPage, 
+  userRole, 
+  collapsed, 
+  setCollapsed, 
+  mobileOpen, 
+  setMobileOpen,
+  customPermissions = []
+}: SidebarProps) {
   const [expandedSections, setExpandedSections] = useState<string[]>(['operations', 'fleet', 'finance']);
 
   const toggleSection = (section: string) => {
@@ -194,6 +204,7 @@ export function Sidebar({ currentPage, setCurrentPage, userRole, collapsed, setC
           label: 'Fixed Diesel Price',
           icon: DollarSign,
           roles: ['MD', 'Admin'],
+          permissionId: 'view_settings'
         },
       ],
     },
@@ -259,7 +270,10 @@ export function Sidebar({ currentPage, setCurrentPage, userRole, collapsed, setC
 
             {(!group.expandable || expandedSections.includes(group.sectionId || '')) &&
               group.items
-                .filter((item) => item.roles.includes(userRole))
+                .filter((item) => {
+                  const permissionId = item.permissionId || `view_${item.id.replace(/-/g, '_')}`;
+                  return hasPermission({ role: userRole, customPermissions }, permissionId);
+                })
                 .map((item) => {
                   const Icon = item.icon;
                   const isActive = currentPage === item.id;

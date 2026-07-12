@@ -5,6 +5,7 @@ public class CreatePurchaseRequest
     public Guid? DepotId { get; set; }
     public decimal Quantity { get; set; }
     public decimal CostPerLitre { get; set; }
+    public decimal? AmountPaid { get; set; }
     public DateTime PurchaseDate { get; set; }
     public string? ReceiptUrl { get; set; }
 }
@@ -14,6 +15,7 @@ public class UpdatePurchaseRequest
     public Guid? DepotId { get; set; }
     public decimal Quantity { get; set; }
     public decimal CostPerLitre { get; set; }
+    public decimal? AmountPaid { get; set; }
     public DateTime PurchaseDate { get; set; }
     public string? EditReason { get; set; }
 }
@@ -33,6 +35,9 @@ public class PurchaseResponse
     public decimal Quantity { get; set; }
     public decimal CostPerLitre { get; set; }
     public decimal TotalCost { get; set; }
+    public decimal? AmountPaid { get; set; }
+    public decimal BalanceForward { get; set; }
+    public decimal DisbursedQuantity { get; set; }
     public DateTime PurchaseDate { get; set; }
     public string? ReceiptUrl { get; set; }
     public string Status { get; set; } = string.Empty;

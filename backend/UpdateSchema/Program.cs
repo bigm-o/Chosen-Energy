@@ -8,7 +8,7 @@ class Program
 {
     static async Task Main()
     {
-        var connectionString = "Host=aws-1-eu-west-1.pooler.supabase.com;Port=5432;Database=postgres;Username=postgres.euymackmbjefkcwyzagq;Password=ChosenEnergy1!2@3#4$;SSL Mode=Require;Trust Server Certificate=true";
+        var connectionString = "Host=aws-0-eu-west-1.pooler.supabase.com;Port=6543;Database=postgres;Username=postgres.euymackmbjefkcwyzagq;Password=ChosenEnergy1!2@3#4$;SSL Mode=Require;Trust Server Certificate=true";
         using var connection = new NpgsqlConnection(connectionString);
         await connection.OpenAsync();
 

@@ -19,6 +19,8 @@ public class InwardLoad
     public DateTime CreatedAt { get; set; }
     public string? Remarks { get; set; }
     public Guid? BatchId { get; set; }
+    // Feature 5: Link to the purchase record being disbursed
+    public Guid? PurchaseId { get; set; }
 }
 
 public class BulkInwardLoadRequest
@@ -27,6 +29,8 @@ public class BulkInwardLoadRequest
     public decimal Quantity { get; set; }
     public Guid? DepotId { get; set; }
     public string? Remarks { get; set; }
+    // Feature 5: Link to a purchase record
+    public Guid? PurchaseId { get; set; }
 }
 
 public class BulkInwardLoadItem

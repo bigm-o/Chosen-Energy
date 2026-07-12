@@ -27,6 +27,7 @@ import { UserManagementPage } from '@/app/pages/UserManagementPage';
 import { Layout } from '@/app/components/Layout';
 
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { hasPermission } from '@/utils/permissions';
 
 function AppContent() {
   const { isAuthenticated, user, logout } = useAuth();
@@ -49,6 +50,11 @@ function AppContent() {
     return <DriverDailyLogPage />;
   }
 
+  const PermissionGuard = ({ id, children }: { id: string, children: React.ReactNode }) => {
+    if (hasPermission(user, id)) return <>{children}</>;
+    return <Navigate to="/dashboard" replace />;
+  };
+
   return (
     <Layout
       currentPage={currentPage}
@@ -56,30 +62,31 @@ function AppContent() {
       userRole={user?.role || 'Admin'}
       userName={user?.fullName || 'User'}
       onLogout={logout}
+      customPermissions={user?.customPermissions}
     >
       <Routes>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/dashboard" element={<PermissionGuard id="view_dashboard"><DashboardPage /></PermissionGuard>} />
 
-        <Route path="/purchasing" element={<PurchasingPage />} />
-        <Route path="/supply" element={<SupplyPage />} />
-        <Route path="/transloading" element={<TransloadingPage />} />
-        <Route path="/daily-logs" element={<AdminDailyLogsPage />} />
-        <Route path="/approvals" element={<ApprovalsPage />} />
-        <Route path="/drivers" element={<DriversPage />} />
-        <Route path="/customers" element={<CustomersPage />} />
-        <Route path="/trucks" element={<TrucksPage />} />
-        <Route path="/maintenance" element={<MaintenancePage />} />
-        <Route path="/diesel-usage" element={<DieselUsagePage />} />
-        <Route path="/depots" element={<DepotsPage />} />
-        <Route path="/invoices" element={<InvoicesPage />} />
-        <Route path="/expenses" element={<ExpensesPage />} />
-        <Route path="/driver-onboarding" element={<DriverOnboardingPage />} />
-        <Route path="/communication" element={<CommunicationCenterPage />} />
-        <Route path="/inward-loads" element={<InwardLoadsPage />} />
-        <Route path="/global-settings" element={<SettingsPage />} />
-        <Route path="/system" element={<SystemSettingsPage />} />
-        <Route path="/user-management" element={<UserManagementPage />} />
+        <Route path="/purchasing" element={<PermissionGuard id="view_purchasing"><PurchasingPage /></PermissionGuard>} />
+        <Route path="/supply" element={<PermissionGuard id="view_supply"><SupplyPage /></PermissionGuard>} />
+        <Route path="/transloading" element={<PermissionGuard id="view_transloading"><TransloadingPage /></PermissionGuard>} />
+        <Route path="/daily-logs" element={<PermissionGuard id="view_daily_logs"><AdminDailyLogsPage /></PermissionGuard>} />
+        <Route path="/approvals" element={<PermissionGuard id="view_approvals"><ApprovalsPage /></PermissionGuard>} />
+        <Route path="/drivers" element={<PermissionGuard id="view_drivers"><DriversPage /></PermissionGuard>} />
+        <Route path="/customers" element={<PermissionGuard id="view_customers"><CustomersPage /></PermissionGuard>} />
+        <Route path="/trucks" element={<PermissionGuard id="view_trucks"><TrucksPage /></PermissionGuard>} />
+        <Route path="/maintenance" element={<PermissionGuard id="view_maintenance"><MaintenancePage /></PermissionGuard>} />
+        <Route path="/diesel-usage" element={<PermissionGuard id="view_diesel_usage"><DieselUsagePage /></PermissionGuard>} />
+        <Route path="/depots" element={<PermissionGuard id="view_depots"><DepotsPage /></PermissionGuard>} />
+        <Route path="/invoices" element={<PermissionGuard id="view_invoices"><InvoicesPage /></PermissionGuard>} />
+        <Route path="/expenses" element={<PermissionGuard id="view_expenses"><ExpensesPage /></PermissionGuard>} />
+        <Route path="/driver-onboarding" element={<PermissionGuard id="view_driver_onboarding"><DriverOnboardingPage /></PermissionGuard>} />
+        <Route path="/communication" element={<PermissionGuard id="view_communication"><CommunicationCenterPage /></PermissionGuard>} />
+        <Route path="/inward-loads" element={<PermissionGuard id="view_inward_loads"><InwardLoadsPage /></PermissionGuard>} />
+        <Route path="/global-settings" element={<PermissionGuard id="view_settings"><SettingsPage /></PermissionGuard>} />
+        <Route path="/system" element={<PermissionGuard id="view_user_management"><SystemSettingsPage /></PermissionGuard>} />
+        <Route path="/user-management" element={<PermissionGuard id="view_user_management"><UserManagementPage /></PermissionGuard>} />
         <Route path="*" element={<DashboardPage />} />
       </Routes>
     </Layout>

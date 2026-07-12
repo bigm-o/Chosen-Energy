@@ -26,7 +26,7 @@ public class JwtService : IJwtService
 
     public string GenerateToken(User user)
     {
-        var claims = new[]
+        var claimsList = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Email, user.Email),
@@ -34,13 +34,22 @@ public class JwtService : IJwtService
             new Claim(ClaimTypes.Role, user.Role.ToString())
         };
 
+        // Add custom permissions as claims
+        if (user.CustomPermissions != null)
+        {
+            foreach (var permission in user.CustomPermissions)
+            {
+                claimsList.Add(new Claim("Permission", permission));
+            }
+        }
+
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSettings:Secret"]!));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(
             issuer: _configuration["JwtSettings:Issuer"],
             audience: _configuration["JwtSettings:Audience"],
-            claims: claims,
+            claims: claimsList,
             expires: DateTime.UtcNow.AddMinutes(int.Parse(_configuration["JwtSettings:ExpiryMinutes"]!)),
             signingCredentials: credentials
         );

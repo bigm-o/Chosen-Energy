@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Search, Plus, Filter, Download as DownloadIcon, Eye, CheckCircle, XCircle, Trash2, Calendar, FileText, ArrowRight, User, Truck, DollarSign, Fuel, Info, Edit2, AlertCircle, Clock, Loader2 } from 'lucide-react';
+import { Search, Plus, Filter, Download as DownloadIcon, Eye, CheckCircle, XCircle, Trash2, Calendar, FileText, ArrowRight, User, Truck, DollarSign, Fuel, Info, Edit2, AlertCircle, Clock, Loader2, Flag } from 'lucide-react';
 import { apiRequest, getFileUrl } from '@/utils/api';
 import { Modal } from '@/app/components/Modal';
 import { toast } from 'sonner';
@@ -25,6 +25,9 @@ interface Supply {
   driverId?: string;
   createdByName?: string;
   editedByName?: string;
+  isFlagged?: boolean;
+  flagReason?: string;
+  flaggedByName?: string;
 }
 
 interface Customer { id: string; companyName: string; }
@@ -49,17 +52,22 @@ export function SupplyPage() {
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showApproveEditModal, setShowApproveEditModal] = useState(false);
   const [showRejectEditModal, setShowRejectEditModal] = useState(false);
+  const [showFlagModal, setShowFlagModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [supplyToDelete, setSupplyToDelete] = useState<Supply | null>(null);
   const [supplyToReject, setSupplyToReject] = useState<Supply | null>(null);
   const [supplyToApprove, setSupplyToApprove] = useState<Supply | null>(null);
+  const [supplyToFlag, setSupplyToFlag] = useState<Supply | null>(null);
   const [editReason, setEditReason] = useState('');
   const [rejectReason, setRejectReason] = useState('');
+  const [flagReasonText, setFlagReasonText] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [modalError, setModalError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isNewCustomer, setIsNewCustomer] = useState(false);
+  const [newCustomerName, setNewCustomerName] = useState('');
 
   const [dateFilter, setDateFilter] = useState({ startDate: '', endDate: '' });
   const [exportDateRange, setExportDateRange] = useState({ startDate: '', endDate: '' });
@@ -217,7 +225,7 @@ export function SupplyPage() {
         });
 
         if (response.ok) {
-          setSuccess(user?.role === 'MD' ? 'Sale updated successfully' : 'Sale edit request submitted for approval');
+          setSuccess(canApprove ? 'Sale updated successfully' : 'Sale edit request submitted for approval');
           setShowAddModal(false);
           setIsEditing(false);
           setEditReason('');
@@ -230,14 +238,48 @@ export function SupplyPage() {
       }
 
       // Handle Create
+      let customerIdToUse = formData.customerId;
+
+      if (isNewCustomer) {
+        if (!newCustomerName.trim()) {
+            setModalError('Please enter a customer name');
+            setIsSubmitting(false);
+            return;
+        }
+        
+        // Feature 1: Quick create customer
+        const quickCreateResp = await apiRequest('/api/customers/quick-create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ companyName: newCustomerName })
+        });
+        
+        if (!quickCreateResp.ok) {
+            const err = await quickCreateResp.json();
+            setModalError(err.message || 'Failed to quick-create customer');
+            setIsSubmitting(false);
+            return;
+        }
+        
+        const newCustomerData = await quickCreateResp.json();
+        customerIdToUse = newCustomerData.data.id;
+      }
+
+      if (!customerIdToUse) {
+        setModalError('Please select or create a customer');
+        setIsSubmitting(false);
+        return;
+      }
+
       if (!formData.invoiceFile) {
         setModalError('Please attach an invoice/proof of sale');
+        setIsSubmitting(false);
         return;
       }
       const compressedFile = await compressImage(formData.invoiceFile);
 
       const submitData = new FormData();
-      submitData.append('CustomerId', formData.customerId);
+      submitData.append('CustomerId', customerIdToUse);
       submitData.append('DriverId', formData.driverId);
       submitData.append('Quantity', formData.quantity);
       submitData.append('PricePerLitre', formData.pricePerLitre);
@@ -253,7 +295,10 @@ export function SupplyPage() {
         setSuccess('Supply record and invoice submitted successfully');
         setShowAddModal(false);
         setFormData({ ...formData, quantity: '', pricePerLitre: '', invoiceFile: null });
+        setIsNewCustomer(false);
+        setNewCustomerName('');
         fetchSupplies();
+        fetchDropdowns(); // refresh customer list
       } else {
         const err = await response.json();
         setModalError(err.message || `Error: ${response.status} ${response.statusText}`);
@@ -475,7 +520,53 @@ export function SupplyPage() {
     }
   };
 
-  const canApprove = user?.role === 'MD';
+  const handleFlagSubmit = async () => {
+    if (!supplyToFlag || !flagReasonText) return;
+    setIsSubmitting(true);
+    try {
+      const response = await apiRequest(`/api/supplies/${supplyToFlag.id}/flag`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: flagReasonText })
+      });
+      if (response.ok) {
+        toast.success('Record flagged successfully');
+        setShowFlagModal(false);
+        setSupplyToFlag(null);
+        setFlagReasonText('');
+        fetchSupplies();
+      } else {
+        const err = await response.json();
+        setModalError(err.message || 'Failed to flag record');
+      }
+    } catch (err) {
+      setModalError('Connection error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleUnflag = async (id: string) => {
+    if (!confirm('Are you sure you want to remove the flag from this record?')) return;
+    setIsSubmitting(true);
+    try {
+      const response = await apiRequest(`/api/supplies/${id}/unflag`, {
+        method: 'POST'
+      });
+      if (response.ok) {
+        toast.success('Flag removed');
+        fetchSupplies();
+      } else {
+        toast.error('Failed to remove flag');
+      }
+    } catch (err) {
+      toast.error('Connection error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const canApprove = user?.role === 'MD' || user?.customPermissions?.includes('approve_supply');
 
   if (loading && supplies.length === 0) {
     return (
@@ -657,10 +748,15 @@ export function SupplyPage() {
             </tr>
           </thead>
           <tbody>
-            {filteredSupplies.map((supply, index) => (
-              <tr key={supply.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 transition-colors group">
+            {filteredSupplies.map((supply) => (
+              <tr key={supply.id} className={`border-b border-gray-100 dark:border-gray-800 transition-colors group ${
+                  supply.isFlagged ? 'bg-red-50 dark:bg-red-900/10' : 'hover:bg-gray-50'
+              }`}>
                 <td className="py-4 px-6">
-                  <span className="text-sm font-bold text-blue-600 dark:text-blue-400">{supply.saleId || 'SAL-000'}</span>
+                  <div className="flex items-center gap-2">
+                      <span className={`text-sm font-bold ${supply.isFlagged ? 'text-red-700 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}`}>{supply.saleId || 'SAL-000'}</span>
+                      {supply.isFlagged && <Flag className="w-3.5 h-3.5 text-red-600 dark:text-red-500 flex-shrink-0" title={`Flagged: ${supply.flagReason}`} />}
+                  </div>
                 </td>
                 <td className="py-4 px-6 text-sm text-gray-900 dark:text-gray-100 font-medium">
                   {new Date(supply.supplyDate).toLocaleDateString('en-GB')}
@@ -679,11 +775,13 @@ export function SupplyPage() {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center gap-2">
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${supply.status === 'Approved' ? 'bg-green-100 text-green-800' :
-                      supply.status === 'Rejected' ? 'bg-red-100 text-red-800' :
+                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                        supply.isFlagged ? 'bg-red-100 text-red-800 border border-red-200' :
+                        supply.status === 'Approved' ? 'bg-green-100 text-green-800' :
+                        supply.status === 'Rejected' ? 'bg-red-100 text-red-800' :
                         'bg-amber-100 text-amber-800'
                       }`}>
-                      {supply.status}
+                      {supply.isFlagged ? 'FLAGGED' : supply.status}
                     </span>
                     {supply.hasPendingEdit && (
                       <span className="px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800 border border-purple-200">
@@ -694,6 +792,24 @@ export function SupplyPage() {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex justify-end gap-2">
+                    {canApprove && !supply.isFlagged && (
+                        <button
+                          onClick={() => { setSupplyToFlag(supply); setShowFlagModal(true); }}
+                          className="p-1 hover:bg-red-50 rounded-md transition-colors"
+                          title="Flag for Fraud/Review"
+                        >
+                          <Flag className="w-4 h-4 text-red-500" />
+                        </button>
+                    )}
+                    {canApprove && supply.isFlagged && (
+                        <button
+                          onClick={() => handleUnflag(supply.id)}
+                          className="p-1 hover:bg-green-50 rounded-md transition-colors"
+                          title="Remove Flag"
+                        >
+                          <Flag className="w-4 h-4 text-green-500 fill-current" />
+                        </button>
+                    )}
                     <button
                       onClick={() => { setSelectedSupply(supply); setShowViewModal(true); }}
                       className="p-1 hover:bg-zinc-100 rounded-md transition-colors"
@@ -782,16 +898,41 @@ export function SupplyPage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-2 gap-6">
             <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Customer</label>
-              <select
-                value={formData.customerId}
-                onChange={e => handleCustomerChange(e.target.value)}
-                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-gray-100 font-bold"
-                required
-              >
-                <option value="">Select Customer</option>
-                {customers.map(c => <option key={c.id} value={c.id}>{c.companyName}</option>)}
-              </select>
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Customer</label>
+                <button 
+                    type="button" 
+                    onClick={() => {
+                        setIsNewCustomer(!isNewCustomer);
+                        setFormData({...formData, customerId: ''});
+                        setNewCustomerName('');
+                    }}
+                    className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                >
+                    {isNewCustomer ? 'Select Existing Customer' : 'Customer not found? Add New'}
+                </button>
+              </div>
+              
+              {isNewCustomer ? (
+                  <input
+                    type="text"
+                    value={newCustomerName}
+                    onChange={e => setNewCustomerName(e.target.value)}
+                    className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-gray-100"
+                    placeholder="Enter new customer company name"
+                    required
+                  />
+              ) : (
+                  <select
+                    value={formData.customerId}
+                    onChange={e => handleCustomerChange(e.target.value)}
+                    className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-gray-100 font-bold"
+                    required
+                  >
+                    <option value="">Select Customer</option>
+                    {customers.map(c => <option key={c.id} value={c.id}>{c.companyName}</option>)}
+                  </select>
+              )}
             </div>
           </div>
 
@@ -1442,6 +1583,55 @@ export function SupplyPage() {
           </div>
         </div>
       </Modal>
+
+      {/* Flag Modal */}
+      <Modal
+        isOpen={showFlagModal}
+        onClose={() => { setShowFlagModal(false); setSupplyToFlag(null); setModalError(null); }}
+        title="Flag Record for Review"
+        size="md"
+      >
+        <div className="space-y-4">
+          <div className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 rounded-xl flex items-start gap-3">
+            <Flag className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" />
+            <div>
+              <p className="text-sm font-bold text-red-900 dark:text-red-400 uppercase">Fraud & Review Flag</p>
+              <p className="text-xs text-red-700 dark:text-red-300 mt-1">This will highlight the record in red and mark it for investigation. Please provide a clear reason.</p>
+            </div>
+          </div>
+          {modalError && (
+            <div className="p-3 bg-red-50 text-red-700 border border-red-200 rounded-lg text-sm">{modalError}</div>
+          )}
+          <div>
+            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-widest text-[10px]">Reason for Flagging</label>
+            <textarea
+              value={flagReasonText}
+              onChange={e => setFlagReasonText(e.target.value)}
+              className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-red-500 outline-none text-sm"
+              rows={4}
+              placeholder="e.g. Volume mismatch with transload, suspicious price..."
+              required
+            />
+          </div>
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              onClick={() => { setShowFlagModal(false); setSupplyToFlag(null); }}
+              className="px-5 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleFlagSubmit}
+              disabled={isSubmitting || !flagReasonText.trim()}
+              className="px-8 py-2.5 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700 disabled:opacity-50 transition-colors flex items-center gap-2"
+            >
+              {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Flag className="w-4 h-4" />}
+              {isSubmitting ? 'Flagging...' : 'Flag Record'}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
     </div>
   );
 }

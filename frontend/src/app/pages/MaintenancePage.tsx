@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { PageHeader } from '@/app/components/PageHeader';
+import { useAuth } from '@/hooks/useAuth';
 import { Plus, Wrench, Truck, Eye, PenTool, CheckCircle, AlertTriangle, AlertCircle, Loader2 } from 'lucide-react';
 import { Modal } from '@/app/components/Modal';
 import { apiRequest } from '@/utils/api';
@@ -25,6 +26,8 @@ interface Truck {
 }
 
 export function MaintenancePage() {
+    const { user } = useAuth();
+    const canApprove = user?.role === 'MD' || user?.customPermissions?.includes('approve_maintenance');
     const [maintenanceLogs, setMaintenanceLogs] = useState<MaintenanceLog[]>([]);
     const [trucks, setTrucks] = useState<Truck[]>([]);
     const [loading, setLoading] = useState(true);
@@ -206,7 +209,7 @@ export function MaintenancePage() {
                                     <p className="font-bold text-gray-900 dark:text-gray-100">₦{log.cost.toLocaleString()}</p>
                                     <p className="text-gray-500">{new Date(log.scheduledDate).toLocaleDateString()}</p>
                                 </div>
-                                {log.status !== 'Completed' && (
+                                {log.status !== 'Completed' && canApprove && (
                                     <button
                                         onClick={() => handleComplete(log.id)}
                                         disabled={isSubmitting}
@@ -255,7 +258,7 @@ export function MaintenancePage() {
                                     </td>
                                     <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">{new Date(log.scheduledDate).toLocaleDateString()}</td>
                                     <td className="py-3 px-4 text-right">
-                                        {log.status !== 'Completed' && (
+                                        {log.status !== 'Completed' && canApprove && (
                                             <button
                                                 onClick={() => handleComplete(log.id)}
                                                 disabled={isSubmitting}

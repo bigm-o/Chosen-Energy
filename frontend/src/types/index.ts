@@ -7,6 +7,7 @@ export interface User {
   role: UserRole;
   isActive: boolean;
   themePreference?: 'light' | 'dark';
+  customPermissions: string[];
 }
 
 export interface ApiResponse<T> {
